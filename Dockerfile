@@ -32,4 +32,5 @@ RUN RAILS_ENV=production SECRET_KEY_BASE=dummy bundle exec rails assets:precompi
 EXPOSE 3000
 
 # Start server (Railway sets PORT env var)
-CMD ["sh", "-c", "bundle exec rails server -b 0.0.0.0 -p ${PORT:-3000}"]
+# Use exec form with shell to properly expand PORT variable
+CMD exec bundle exec rails server -b 0.0.0.0 -p "${PORT:-3000}"
