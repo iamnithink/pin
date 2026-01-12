@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Setting up PIN (PlayInNear)..."
+
+# Check if .env exists
+if [ ! -f .env ]; then
+  echo "Creating .env file from .env.example..."
+  cp .env.example .env
+  echo "⚠️  Please update .env with your configuration!"
+fi
+
+# Generate secret keys if not set
+if ! grep -q "SECRET_KEY_BASE=your_secret_key_base_here" .env; then
+  echo "Secret keys already configured"
+else
+  echo "Generating secret keys..."
+  SECRET_KEY=$(docker-compose run --rm web rails secret)
+  sed -i.bak "s/SECRET_KEY_BASE=your_secret_key_base_here/SECRET_KEY_BASE=$SECRET_KEY/" .env
+  rm .env.bak 2>/dev/null || true
+fi
+
+echo "Building Docker images..."
+docker-compose build
+
+echo "Starting services..."
+docker-compose up -d db redis
+
+echo "Waiting for database to be ready..."
+sleep 5
+
+echo "Setting up database..."
+docker-compose run --rm web rails db:create
+docker-compose run --rm web rails db:migrate
+docker-compose run --rm web rails db:seed
+
+echo "Starting all services..."
+docker-compose up -d
+
+echo ""
+echo "✅ Setup complete!"
+echo ""
+echo "Access the application at:"
+echo "  - Web: http://localhost:3000"
+echo "  - Admin: http://localhost:3000/admin"
+echo "    Email: admin@playinnear.com"
+echo "    Password: admin123456"
+echo ""
+echo "View logs with: docker-compose logs -f"
+

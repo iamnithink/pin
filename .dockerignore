@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+Dockerfile.dev
+docker-compose.yml
+docker-compose.prod.yml
+.dockerignore
+
+# Railway
+railway.json
+Procfile
+
+# Development files
+.env
+.env.local
+.env.*.local
+
+# Logs
+log/*
+tmp/*
+*.log
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage/
+spec/
+
+# Build artifacts
+/public/assets
+/public/packs
+/public/packs-test

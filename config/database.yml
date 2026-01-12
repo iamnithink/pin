@@ -1,0 +1,19 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+  url: <%= ENV.fetch("DATABASE_URL") { "postgresql://pin_user:pin_password@localhost:5432/pin_development" } %>
+
+development:
+  <<: *default
+  database: pin_development
+
+test:
+  <<: *default
+  database: pin_test
+
+production:
+  <<: *default
+  database: pin_production
+
