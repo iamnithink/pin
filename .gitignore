@@ -34,7 +34,7 @@
 .env.local
 .env.*.local
 RAILWAY_DEPLOYMENT.md
-docker-compose.prod.yml
+DEPLOY.md
 
 # Ignore node_modules
 /node_modules
