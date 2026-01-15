@@ -5,7 +5,18 @@ class TournamentsController < ApplicationController
   def show
     authorize! :read, @tournament
     @tournament.increment_view_count unless @tournament.view_count_changed?
-    @is_liked = user_signed_in? && @tournament.tournament_likes.exists?(user_id: current_user.id)
+    
+    # Safely check if tournament_likes table exists and get like status
+    @is_liked = begin
+      if user_signed_in? && @tournament.respond_to?(:tournament_likes)
+        @tournament.tournament_likes.exists?(user_id: current_user.id)
+      else
+        false
+      end
+    rescue => e
+      false
+    end
+    
     # Safely get likes count - handle case where counter cache column doesn't exist
     @like_count = begin
       if @tournament.respond_to?(:likes_count) && @tournament.attributes.key?('likes_count')
