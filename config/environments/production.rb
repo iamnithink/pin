@@ -22,7 +22,14 @@ Rails.application.configure do
   # Allow Railway domains (Rails 6+ host authorization)
   # Railway handles SSL termination and routing, so we can safely allow all hosts
   # This prevents "Host validation failed" errors when Railway domains change
-  if ENV['RAILWAY'].present? || ENV['RAILWAY_ENVIRONMENT_ID'].present?
+  # Check multiple Railway environment variables to ensure we detect Railway deployment
+  railway_env_present = ENV['RAILWAY'].present? || 
+                        ENV['RAILWAY_ENVIRONMENT_ID'].present? || 
+                        ENV['RAILWAY_ENVIRONMENT'].present? ||
+                        ENV['RAILWAY_PROJECT_ID'].present?
+  
+  if railway_env_present
+    # Clear host restrictions for Railway (Railway handles security)
     config.hosts.clear
   elsif ENV['APP_URL'].present?
     # Allow specific domain from APP_URL if set (for other platforms)
