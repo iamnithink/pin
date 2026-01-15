@@ -38,7 +38,13 @@ Rails.application.configure do
   if ENV['CLOUDINARY_CLOUD_NAME'].present?
     config.active_storage.service = :cloudinary
   else
-    Rails.logger.warn "WARNING: Cloudinary credentials not set. Using local storage in production. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET."
+    # Use safe logging that works during asset precompilation (when Rails.logger might be nil)
+    if defined?(Rails.logger) && Rails.logger
+      Rails.logger.warn "WARNING: Cloudinary credentials not set. Using local storage in production. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET."
+    else
+      # Fallback for build time when logger isn't available
+      STDERR.puts "WARNING: Cloudinary credentials not set. Using local storage in production. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET."
+    end
     config.active_storage.service = :local
   end
   config.active_storage.variant_processor = :mini_magick
