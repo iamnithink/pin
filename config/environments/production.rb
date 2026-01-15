@@ -19,6 +19,18 @@ Rails.application.configure do
   # Enable static file serving from the `/public` folder (turn off if using NGINX/Apache for it).
   config.public_file_server.enabled = ENV['RAILS_SERVE_STATIC_FILES'].present? || ENV['RENDER'].present? || ENV['RAILWAY'].present? || true
 
+  # Allow Railway domains (Rails 6+ host authorization)
+  # Railway provides domains like *.up.railway.app
+  config.hosts << /.*\.up\.railway\.app/ if ENV['RAILWAY'].present? || ENV['RAILWAY_ENVIRONMENT_ID'].present?
+  # Also allow specific domain from APP_URL if set
+  if ENV['APP_URL'].present?
+    uri = URI.parse(ENV['APP_URL'])
+    config.hosts << uri.host if uri.host
+  end
+  # Allow all hosts in production for Railway (since domains can change)
+  # This is safe because Railway handles SSL and routing
+  config.hosts.clear if ENV['RAILWAY'].present? || ENV['RAILWAY_ENVIRONMENT_ID'].present?
+
   # Compress CSS using a preprocessor.
   # config.assets.css_compressor = :sass
 
