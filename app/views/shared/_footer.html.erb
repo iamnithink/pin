@@ -10,16 +10,16 @@
         <h3><%= t('footer.quick_links.title') %></h3>
         <ul>
           <li><%= link_to t('footer.quick_links.home'), root_path %></li>
-          <li><%= link_to t('footer.quick_links.about'), about_path %></li>
-          <li><%= link_to t('footer.quick_links.contact'), contact_path %></li>
+          <li><%= link_to t('footer.quick_links.about'), about_path(locale: I18n.locale) %></li>
+          <li><%= link_to t('footer.quick_links.contact'), contact_path(locale: I18n.locale) %></li>
         </ul>
       </div>
       
       <div class="footer-section">
         <h3><%= t('footer.legal.title') %></h3>
         <ul>
-          <li><%= link_to t('footer.legal.privacy_policy'), privacy_policy_path %></li>
-          <li><%= link_to t('footer.legal.terms_conditions'), terms_conditions_path %></li>
+          <li><%= link_to t('footer.legal.privacy_policy'), privacy_policy_path(locale: I18n.locale) %></li>
+          <li><%= link_to t('footer.legal.terms_conditions'), terms_conditions_path(locale: I18n.locale) %></li>
         </ul>
       </div>
       
