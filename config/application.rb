@@ -32,6 +32,11 @@ module Pin
     # ActiveAdmin requires these
     config.active_job.queue_adapter = :sidekiq
     config.action_mailer.default_url_options = { host: ENV.fetch('APP_URL', 'http://localhost:3000') }
+
+    # I18n Configuration
+    config.i18n.available_locales = [:en, :hi, :kn, :ml]
+    config.i18n.default_locale = :en
+    config.i18n.fallbacks = { hi: :en, kn: :en, ml: :en }
   end
 end
 

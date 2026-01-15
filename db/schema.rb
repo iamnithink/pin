@@ -41,7 +41,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
     t.integer "byte_size", null: false
     t.string "checksum", null: false
     t.datetime "created_at", null: false
+    t.string "service_name", default: "local", null: false
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+    t.index ["service_name"], name: "index_active_storage_blobs_on_service_name"
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+    t.index ["blob_id"], name: "index_active_storage_variant_records_on_blob_id"
   end
 
   create_table "admin_users", force: :cascade do |t|
@@ -121,6 +130,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
     t.index ["sport_id"], name: "index_teams_on_sport_id"
   end
 
+  create_table "tournament_likes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "tournament_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tournament_id"], name: "index_tournament_likes_on_tournament_id"
+    t.index ["user_id", "tournament_id"], name: "index_tournament_likes_on_user_id_and_tournament_id", unique: true
+    t.index ["user_id"], name: "index_tournament_likes_on_user_id"
+  end
+
   create_table "tournament_participants", force: :cascade do |t|
     t.bigint "tournament_id", null: false
     t.bigint "user_id", null: false
@@ -198,6 +217,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
     t.decimal "venue_longitude", precision: 10, scale: 7
     t.string "venue_google_maps_link"
     t.string "organized_by", comment: "Organizer name (string field, not user association)"
+    t.integer "likes_count", default: 0, null: false
     t.index ["created_by_id"], name: "index_tournaments_on_created_by_id"
     t.index ["cricket_match_type_id"], name: "index_tournaments_on_cricket_match_type_id"
     t.index ["is_active"], name: "index_tournaments_on_is_active"
@@ -206,8 +226,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
     t.index ["pincode"], name: "index_tournaments_on_pincode"
     t.index ["slug"], name: "index_tournaments_on_slug", unique: true
     t.index ["sport_id", "pincode", "tournament_status", "start_time"], name: "index_tournaments_on_discovery"
+    t.index ["sport_id", "tournament_status"], name: "index_tournaments_on_sport_status"
     t.index ["sport_id"], name: "index_tournaments_on_sport_id"
     t.index ["start_time"], name: "index_tournaments_on_start_time"
+    t.index ["tournament_status", "is_active", "start_time"], name: "index_tournaments_on_status_active_start_time"
     t.index ["tournament_status"], name: "index_tournaments_on_tournament_status"
     t.index ["tournament_theme_id"], name: "index_tournaments_on_tournament_theme_id"
     t.index ["venue_id"], name: "index_tournaments_on_venue_id"
@@ -238,12 +260,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
     t.string "last_sign_in_ip"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "role", default: "user", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["latitude", "longitude"], name: "index_users_on_latitude_and_longitude"
     t.index ["phone"], name: "index_users_on_phone", unique: true
     t.index ["pincode"], name: "index_users_on_pincode"
     t.index ["provider", "uid"], name: "index_users_on_provider_and_uid"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["role"], name: "index_users_on_role"
   end
 
   create_table "venues", force: :cascade do |t|
@@ -275,10 +299,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "team_members", "teams"
   add_foreign_key "team_members", "users"
   add_foreign_key "teams", "sports"
   add_foreign_key "teams", "users", column: "captain_id"
+  add_foreign_key "tournament_likes", "tournaments"
+  add_foreign_key "tournament_likes", "users"
   add_foreign_key "tournament_participants", "teams"
   add_foreign_key "tournament_participants", "tournaments"
   add_foreign_key "tournament_participants", "users"

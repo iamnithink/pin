@@ -2,10 +2,11 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
-amazon:
-  service: S3
-  access_key_id: <%= ENV['AWS_ACCESS_KEY_ID'] || '' %>
-  secret_access_key: <%= ENV['AWS_SECRET_ACCESS_KEY'] || '' %>
-  region: <%= ENV.fetch('AWS_REGION', 'us-east-1') %>
-  bucket: <%= ENV.fetch('AWS_BUCKET', 'pin-storage') %>
+# Cloudinary - Free tier: 25GB storage, 25GB bandwidth/month
+# Sign up at https://cloudinary.com/users/register/free
+cloudinary:
+  service: Cloudinary
+  cloud_name: <%= ENV['CLOUDINARY_CLOUD_NAME'] %>
+  api_key: <%= ENV['CLOUDINARY_API_KEY'] %>
+  api_secret: <%= ENV['CLOUDINARY_API_SECRET'] %>
 

@@ -3,6 +3,7 @@ class Api::V1::TeamsController < Api::V1::BaseController
 
   def index
     teams = Team.active
+                 .includes(:sport, :captain)
     teams = teams.where(sport_id: params[:sport_id]) if params[:sport_id].present?
     teams = teams.limit(params[:limit] || 20)
     
@@ -10,7 +11,8 @@ class Api::V1::TeamsController < Api::V1::BaseController
   end
 
   def show
-    team = Team.find_by!(slug: params[:id])
+    team = Team.includes(:sport, :captain)
+               .find_by!(slug: params[:id])
     render_success(serialize_team(team, detailed: true))
   end
 
@@ -66,7 +68,9 @@ class Api::V1::TeamsController < Api::V1::BaseController
     }
 
     if detailed
-      data[:members] = team.members.map { |m| { id: m.id, name: m.name } }
+      # Eager load members to avoid N+1 queries
+      members = team.team_members.includes(:user).active
+      data[:members] = members.map { |m| { id: m.user.id, name: m.user.name } }
     end
 
     data

@@ -1,21 +1,70 @@
 require 'faker'
 require_relative '../lib/tournament_theme_templates'
 
-puts "Seeding data..."
+puts "=" * 60
+puts "Seeding database with role-based access control..."
+puts "=" * 60
 
 ########################################
-# Admin user
+# Users with Roles (Super Admin, Admin, Regular Users)
 ########################################
 
-admin = AdminUser.find_or_create_by!(email: 'admin@playinnear.com') do |u|
+puts "\n[1/8] Creating users with roles..."
+
+# Super Admin
+super_admin = User.find_or_create_by!(email: 'superadmin@playinnear.com') do |u|
+  u.name = 'Super Administrator'
+  u.phone = '9000000000'
   u.password = 'admin123456'
   u.password_confirmation = 'admin123456'
+  u.pincode = '560001'
+  u.address = 'Bangalore, Karnataka, India'
+  u.phone_verified = true
+  u.role = 'super_admin'
 end
-puts "Admin user: #{admin.email}"
+super_admin.update!(role: 'super_admin') unless super_admin.super_admin?
+puts "  ✓ Super Admin: #{super_admin.email} (password: admin123456)"
+
+# Admin
+admin = User.find_or_create_by!(email: 'admin@playinnear.com') do |u|
+  u.name = 'Administrator'
+  u.phone = '9000000001'
+  u.password = 'admin123456'
+  u.password_confirmation = 'admin123456'
+  u.pincode = '560001'
+  u.address = 'Bangalore, Karnataka, India'
+  u.phone_verified = true
+  u.role = 'admin'
+end
+admin.update!(role: 'admin') unless admin.admin?
+puts "  ✓ Admin: #{admin.email} (password: admin123456)"
+
+# Regular Users (15 users)
+users = []
+15.times do |i|
+  user = User.find_or_create_by!(email: "user#{i + 1}@example.com") do |u|
+    u.name = Faker::Name.name
+    u.phone = "90000#{format('%05d', i + 2)}"[0, 10]
+    u.password = 'password123'
+    u.password_confirmation = 'password123'
+    u.pincode = format("5600%02d", rand(0..99))
+    u.address = Faker::Address.full_address
+    u.phone_verified = [true, false].sample
+    u.role = 'user'
+  end
+  user.update!(role: 'user') unless user.regular_user?
+  users << user
+end
+puts "  ✓ Created #{users.count} regular users"
+
+all_users = [super_admin, admin] + users
+puts "  Total users: #{all_users.count} (1 super_admin, 1 admin, #{users.count} users)"
 
 ########################################
 # Sports (4 main sports)
 ########################################
+
+puts "\n[2/8] Creating sports..."
 
 sports_data = [
   { name: 'Cricket',    description: 'Cricket matches and tournaments',    icon: '🏏', display_order: 1 },
@@ -32,39 +81,23 @@ sports = sports_data.map do |attrs|
     s.active         = true
   end
 end
-puts "Sports: #{sports.map(&:name).join(', ')}"
+puts "  ✓ Sports: #{sports.map(&:name).join(', ')}"
 
 cricket = sports.find { |s| s.name == 'Cricket' }
-
-########################################
-# Sample users (15)
-########################################
-
-users = 15.times.map do |i|
-  User.find_or_create_by!(email: "user#{i + 1}@example.com") do |u|
-    u.name           = Faker::Name.name
-    u.phone          = "90000#{format('%05d', i)}"[0, 10]
-    u.password       = 'password123'
-    # 6‑digit pincode like 5600xx
-    u.pincode        = format("5600%02d", rand(0..99))
-    u.address        = Faker::Address.full_address
-    u.phone_verified = [true, false].sample
-  end
-end
-puts "Users created: #{users.count}"
 
 ########################################
 # Venues (15)
 ########################################
 
+puts "\n[3/8] Creating venues..."
+
 venues = 15.times.map do |i|
   Venue.find_or_create_by!(name: "Ground #{i + 1}") do |v|
-    v.description   = "Local ground #{i + 1}"
+    v.description   = "Local ground #{i + 1} for sports activities"
     v.address       = Faker::Address.street_address
     v.city          = 'Bengaluru'
     v.state         = 'Karnataka'
     v.country       = 'India'
-    # 6‑digit pincode like 5600xx
     v.pincode       = format("5600%02d", rand(0..99))
     v.latitude      = 12.9 + rand * 0.1
     v.longitude     = 77.5 + rand * 0.1
@@ -73,14 +106,16 @@ venues = 15.times.map do |i|
     v.hourly_rate   = rand(200..800)
     v.is_verified   = [true, false].sample
     v.is_active     = true
-    v.created_by    = users.sample
+    v.created_by    = all_users.sample
   end
 end
-puts "Venues created: #{venues.count}"
+puts "  ✓ Created #{venues.count} venues"
 
 ########################################
 # Cricket match types (7)
 ########################################
+
+puts "\n[4/8] Creating cricket match types..."
 
 if cricket
   cricket_types_data = [
@@ -101,14 +136,17 @@ if cricket
       t.active       = true
     end
   end
-  puts "Cricket match types: #{cricket_types.map(&:name).join(', ')}"
+  puts "  ✓ Created #{cricket_types.count} cricket match types"
 else
   cricket_types = []
+  puts "  ⚠ Cricket sport not found, skipping cricket match types"
 end
 
 ########################################
 # Tournament Themes (3 default themes with HTML templates)
 ########################################
+
+puts "\n[5/8] Creating tournament themes..."
 
 themes_data = [
   { 
@@ -146,7 +184,7 @@ themes = themes_data.map do |attrs|
     t.template_html   = attrs[:template_html]
     t.is_active       = true
   end
-  # Always update template_html to ensure latest structure (contact phones, QR code positioning, etc.)
+  # Always update template_html to ensure latest structure
   theme.update!(
     template_html: attrs[:template_html],
     description: attrs[:description],
@@ -155,16 +193,18 @@ themes = themes_data.map do |attrs|
   )
   theme
 end
-puts "Tournament themes: #{themes.map(&:name).join(', ')}"
+puts "  ✓ Created #{themes.count} tournament themes: #{themes.map(&:name).join(', ')}"
 
 ########################################
 # Teams (20) – mix of default (admin) and user teams
 ########################################
 
+puts "\n[6/8] Creating teams..."
+
 # Default teams created by admin (10 teams)
 default_teams = 10.times.map do |i|
   sport = sports.sample
-  captain = users.sample
+  captain = all_users.sample
 
   Team.find_or_create_by!(name: "Default Team #{sport.name} #{i + 1}") do |t|
     t.description = "Default team #{i + 1} for #{sport.name} (created by Admin)"
@@ -174,12 +214,11 @@ default_teams = 10.times.map do |i|
     t.is_active   = true
   end
 end
-puts "Default teams created: #{default_teams.count}"
 
 # User-created teams (10 teams)
 user_teams = 10.times.map do |i|
   sport = sports.sample
-  captain = users.sample
+  captain = all_users.sample
 
   Team.find_or_create_by!(name: "User Team #{sport.name} #{i + 1}") do |t|
     t.description = "User team #{i + 1} for #{sport.name}"
@@ -189,13 +228,15 @@ user_teams = 10.times.map do |i|
     t.is_active   = true
   end
 end
-puts "User teams created: #{user_teams.count}"
 
 all_teams = default_teams + user_teams
+puts "  ✓ Created #{default_teams.count} default teams and #{user_teams.count} user teams"
 
 ########################################
 # Tournaments (40 total: 25 Cricket + 15 Other sports)
 ########################################
+
+puts "\n[7/8] Creating tournaments..."
 
 tournament_statuses = %w[draft published completed cancelled]
 
@@ -231,7 +272,7 @@ cricket_tournament_titles = [
 ]
 
 25.times do |i|
-  creator     = users.sample
+  creator     = all_users.sample
   venue       = venues.sample
   start_time  = Time.current + (i + 1).days + rand(0..12).hours
   c_type      = cricket_types.sample
@@ -310,7 +351,6 @@ cricket_tournament_titles = [
     t.second_prize          = second_prize
     t.third_prize           = third_prize
     t.prizes_json           = additional_prizes
-    # New fields
     t.venue_name            = venue.name
     t.venue_address         = venue.full_address
     t.venue_latitude        = venue.latitude
@@ -333,7 +373,7 @@ other_sports = sports.reject { |s| s.name == 'Cricket' }
 
 15.times do |i|
   sport       = other_sports.sample
-  creator     = users.sample
+  creator     = all_users.sample
   venue       = venues.sample
   start_time  = Time.current + (i + 26).days + rand(0..12).hours
   theme       = themes.sample
@@ -400,7 +440,6 @@ other_sports = sports.reject { |s| s.name == 'Cricket' }
     t.second_prize          = second_prize
     t.third_prize           = third_prize
     t.prizes_json           = additional_prizes
-    # New fields
     t.venue_name            = venue.name
     t.venue_address         = venue.full_address
     t.venue_latitude        = venue.latitude
@@ -418,22 +457,45 @@ other_sports = sports.reject { |s| s.name == 'Cricket' }
   tournaments << tournament
 end
 
-puts "Tournaments created: #{tournaments.count} (Cricket: #{tournaments.count { |t| t.sport == cricket }}, Other: #{tournaments.count { |t| t.sport != cricket }})"
+puts "  ✓ Created #{tournaments.count} tournaments"
+puts "    - Cricket: #{tournaments.count { |t| t.sport == cricket }}"
+puts "    - Other sports: #{tournaments.count { |t| t.sport != cricket }}"
 
 ########################################
 # Tournament participants (simple join records)
 ########################################
 
+puts "\n[8/8] Creating tournament participants..."
+
+participant_count = 0
 tournaments.each do |tournament|
-  sample_users = users.sample(4)
+  sample_users = all_users.sample(4)
   sample_users.each do |user|
     TournamentParticipant.find_or_create_by!(tournament: tournament, user: user) do |tp|
       tp.status = %w[pending confirmed].sample
       tp.role   = 'player'
     end
+    participant_count += 1
   end
 end
-puts "Tournament participants created for tournaments"
+puts "  ✓ Created #{participant_count} tournament participant records"
 
+########################################
+# Summary
+########################################
+
+puts "\n" + "=" * 60
 puts "Seed data created successfully!"
-
+puts "=" * 60
+puts "\nLogin Credentials:"
+puts "  Super Admin: superadmin@playinnear.com / admin123456"
+puts "  Admin:       admin@playinnear.com / admin123456"
+puts "  Users:       user1@example.com to user15@example.com / password123"
+puts "\nAccess:"
+puts "  - ActiveAdmin: http://localhost:3000/admin (use super_admin or admin account)"
+puts "  - Public Site: http://localhost:3000"
+puts "\nRoles:"
+puts "  - Super Admin: Full access to everything"
+puts "  - Admin: Access to Dashboard, Teams, Tournaments, Venues"
+puts "  - User: Access to own dashboard and tournaments"
+puts "=" * 60

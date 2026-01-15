@@ -1,5 +1,8 @@
 class HomeController < ApplicationController
   include TournamentThemeHelper
+  
+  # Homepage is public - no authorization needed
+  skip_authorization_check only: [:index]
 
   def index
     @sports = Sport.cached_active
@@ -13,11 +16,14 @@ class HomeController < ApplicationController
     
     # Build base query with eager loading to avoid N+1 queries
     # Include all associations that are always accessed in the view
+    # Note: tournament_likes uses counter_cache (likes_count), so no need to eager load
+    # Eager load image_attachment to avoid N+1 when checking image.attached? in the view
+    # Use preload for ActiveStorage (polymorphic association) - loads attachment records efficiently
     @tournaments = Tournament.published
                             .active
                             .upcoming
                             .includes(:sport, :tournament_theme)
-                            .preload(image_attachment: :blob)
+                            .preload(:image_attachment)
     
     # Apply sport filter (only if a sport is selected, otherwise show all)
     @tournaments = @tournaments.where(sport_id: sport_id) if sport_id.present?

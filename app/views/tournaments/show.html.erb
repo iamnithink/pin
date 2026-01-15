@@ -1,7 +1,7 @@
 <div class="tournament-show-container">
   <div class="container">
     <div class="tournament-header">
-      <a href="<%= root_path %>" class="back-link">← Back to Tournaments</a>
+      <a href="<%= root_path %>" class="back-link"><%= t('tournament.back') %></a>
       <h1><%= @tournament.title %></h1>
       <div class="tournament-badges">
         <span class="badge badge-sport"><%= @tournament.sport.icon %> <%= @tournament.sport.name %></span>
@@ -9,10 +9,40 @@
           <span class="badge"><%= @tournament.cricket_match_type.name %></span>
         <% end %>
       </div>
+      
+      <!-- Like and Share Buttons -->
+      <div class="tournament-actions-header">
+        <button id="like-btn" class="btn-like <%= 'liked' if @is_liked %>" data-tournament-slug="<%= @tournament.slug %>" data-liked="<%= @is_liked %>">
+          <span class="like-icon">❤️</span>
+          <span class="like-text"><%= @is_liked ? t('tournament.unlike') : t('tournament.like') %></span>
+          <span class="like-count" id="like-count"><%= @like_count %></span>
+        </button>
+        
+        <button id="share-btn" class="btn-share" data-url="<%= request.original_url %>" data-title="<%= @tournament.title %>">
+          <span class="share-icon">🔗</span>
+          <span class="share-text"><%= t('tournament.share') %></span>
+        </button>
+      </div>
     </div>
 
     <div class="tournament-content-grid">
       <div class="tournament-main">
+        <!-- Tournament Image (shown at top if attached, regardless of theme) -->
+        <% if @tournament.image.attached? %>
+          <div class="tournament-image-section" style="margin-bottom: 30px;">
+            <%= optimized_image_tag @tournament.image, 
+                alt: @tournament.title, 
+                class: "tournament-main-image",
+                width: 1200,
+                quality: 'auto:good',
+                format: 'auto',
+                loading: 'eager',
+                decoding: 'async',
+                priority: 'high',
+                style: 'width: 100%; max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);' %>
+          </div>
+        <% end %>
+
         <% if @tournament.tournament_theme.present? && @tournament.tournament_theme.template_html.present? %>
           <!-- Render full tournament theme -->
           <div class="tournament-theme-full">
@@ -23,7 +53,7 @@
           <div class="tournament-additional-details">
             <% if @tournament.description.present? %>
               <div class="detail-section">
-                <h3>📝 Description</h3>
+                <h3>📝 <%= t('tournament.description') %></h3>
                 <div class="detail-content">
                   <%= simple_format(@tournament.description) %>
                 </div>
@@ -32,7 +62,7 @@
 
             <% if @tournament.rules_and_regulations.present? %>
               <div class="detail-section">
-                <h3>📋 Rules & Regulations</h3>
+                <h3>📋 <%= t('tournament.rules') %></h3>
                 <div class="detail-content">
                   <%= @tournament.rules_and_regulations %>
                 </div>
@@ -41,7 +71,7 @@
 
             <% if @tournament.teams_text.present? %>
               <div class="detail-section">
-                <h3>👥 Teams</h3>
+                <h3><%= t('tournament.teams') %></h3>
                 <div class="detail-content">
                   <ol class="teams-list">
                     <% @tournament.teams_text.split("\n").each do |team| %>
@@ -51,44 +81,29 @@
                 </div>
               </div>
             <% end %>
-
-            <% if @tournament.contact_phones.present? %>
-              <div class="detail-section">
-                <h3>📞 Contact Information</h3>
-                <div class="detail-content">
-                  <div class="contact-phones">
-                    <% @tournament.contact_phones.each do |phone| %>
-                      <a href="tel:<%= phone %>" class="contact-phone"><%= phone %></a>
-                    <% end %>
-                  </div>
-                </div>
-              </div>
-            <% end %>
           </div>
         <% else %>
           <!-- Default tournament display (no theme) -->
           <div class="tournament-card-default">
-            <% if @tournament.image.attached? %>
-              <%= image_tag @tournament.image, alt: @tournament.title, class: "tournament-main-image" %>
-            <% end %>
+            <!-- Image already shown above if attached, so no need to show again here -->
 
             <div class="tournament-info-section">
-              <h2>Tournament Details</h2>
+              <h2><%= t('tournament.details') %></h2>
               <div class="info-grid">
                 <div class="info-item">
-                  <span class="info-label">📅 Start Time</span>
+                  <span class="info-label"><%= t('tournament.start_time') %></span>
                   <span class="info-value"><%= @tournament.start_time.strftime("%B %d, %Y at %I:%M %p") %></span>
                 </div>
                 <% if @tournament.end_time.present? %>
                   <div class="info-item">
-                    <span class="info-label">🏁 End Time</span>
+                    <span class="info-label"><%= t('tournament.end_time') %></span>
                     <span class="info-value"><%= @tournament.end_time.strftime("%B %d, %Y at %I:%M %p") %></span>
                   </div>
                 <% end %>
                 <div class="info-item">
-                  <span class="info-label">📍 Venue</span>
+                  <span class="info-label"><%= t('tournament.venue') %></span>
                   <span class="info-value">
-                    <%= @tournament.venue_name.presence || @tournament.venue&.name || 'TBD' %>
+                    <%= @tournament.venue_name.presence || @tournament.venue&.name || t('home.tournaments.location_tbd') %>
                     <% if @tournament.venue_address.present? %>
                       <br><small><%= @tournament.venue_address %></small>
                     <% end %>
@@ -96,13 +111,13 @@
                 </div>
                 <% if @tournament.entry_fee.present? %>
                   <div class="info-item">
-                    <span class="info-label">💰 Entry Fee</span>
+                    <span class="info-label"><%= t('tournament.entry_fee') %></span>
                     <span class="info-value">₹<%= @tournament.entry_fee.to_i %></span>
                   </div>
                 <% end %>
                 <% if @tournament.organized_by.present? %>
                   <div class="info-item">
-                    <span class="info-label">👤 Organized By</span>
+                    <span class="info-label"><%= t('tournament.organized_by') %></span>
                     <span class="info-value"><%= @tournament.organized_by %></span>
                   </div>
                 <% end %>
@@ -110,14 +125,14 @@
 
               <% if @tournament.description.present? %>
                 <div class="description-section">
-                  <h3>Description</h3>
+                  <h3><%= t('tournament.description') %></h3>
                   <p><%= simple_format(@tournament.description) %></p>
                 </div>
               <% end %>
 
               <% if @tournament.rules_and_regulations.present? %>
                 <div class="rules-section">
-                  <h3>Rules & Regulations</h3>
+                  <h3><%= t('tournament.rules') %></h3>
                   <div class="rules-content">
                     <%= @tournament.rules_and_regulations %>
                   </div>
@@ -126,23 +141,23 @@
 
               <% if @tournament.first_prize.present? || @tournament.prizes_json.present? %>
                 <div class="prizes-section">
-                  <h3>🏆 Prize Pool</h3>
+                  <h3><%= t('tournament.prize_pool') %></h3>
                   <div class="prizes-list">
                     <% if @tournament.first_prize.present? %>
                       <div class="prize-item">
-                        <span class="prize-position">1st Place</span>
+                        <span class="prize-position"><%= t('tournament.first_place') %></span>
                         <span class="prize-amount">₹<%= @tournament.first_prize.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse %></span>
                       </div>
                     <% end %>
                     <% if @tournament.second_prize.present? %>
                       <div class="prize-item">
-                        <span class="prize-position">2nd Place</span>
+                        <span class="prize-position"><%= t('tournament.second_place') %></span>
                         <span class="prize-amount">₹<%= @tournament.second_prize.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse %></span>
                       </div>
                     <% end %>
                     <% if @tournament.third_prize.present? %>
                       <div class="prize-item">
-                        <span class="prize-position">3rd Place</span>
+                        <span class="prize-position"><%= t('tournament.third_place') %></span>
                         <span class="prize-amount">₹<%= @tournament.third_prize.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse %></span>
                       </div>
                     <% end %>
@@ -160,7 +175,7 @@
 
               <% if @tournament.contact_phones.present? %>
                 <div class="contact-section">
-                  <h3>📞 Contact</h3>
+                  <h3><%= t('tournament.contact') %></h3>
                   <div class="contact-phones">
                     <% @tournament.contact_phones.each do |phone| %>
                       <a href="tel:<%= phone %>" class="contact-phone"><%= phone %></a>
@@ -171,7 +186,7 @@
 
               <% if @tournament.teams_text.present? %>
                 <div class="teams-section">
-                  <h3>👥 Teams</h3>
+                  <h3><%= t('tournament.teams') %></h3>
                   <ol class="teams-list">
                     <% @tournament.teams_text.split("\n").each do |team| %>
                       <li><%= team.strip %></li>
@@ -183,7 +198,7 @@
               <% if @tournament.venue_google_maps_link.present? || @tournament.venue&.google_maps_link.present? %>
                 <div class="map-section">
                   <% gmap_link = @tournament.venue_google_maps_link.presence || @tournament.venue&.google_maps_link %>
-                  <a href="<%= gmap_link %>" target="_blank" class="btn-map">🗺️ View on Google Maps</a>
+                  <a href="<%= gmap_link %>" target="_blank" class="btn-map"><%= t('tournament.view_map') %></a>
                 </div>
               <% end %>
             </div>
@@ -197,7 +212,7 @@
 <style>
   .tournament-show-container {
     min-height: 100vh;
-    background: #f5f5f5;
+    background: var(--bg-secondary, #f5f5f5);
     padding: 40px 0;
   }
 
@@ -210,18 +225,20 @@
   .back-link {
     display: inline-block;
     margin-bottom: 20px;
-    color: #667eea;
+    color: var(--accent, #3b82f6);
     text-decoration: none;
     font-weight: 600;
+    transition: color 0.3s ease;
   }
 
   .back-link:hover {
     text-decoration: underline;
+    color: var(--accent-hover, #2563eb);
   }
 
   .tournament-header h1 {
     font-size: 2.5rem;
-    color: #333;
+    color: var(--text-primary, #333);
     margin: 0 0 20px 0;
   }
 
@@ -233,7 +250,7 @@
 
   .badge {
     padding: 8px 16px;
-    background: #667eea;
+    background: var(--accent, #3b82f6);
     color: white;
     border-radius: 20px;
     font-size: 0.9rem;
@@ -241,7 +258,7 @@
   }
 
   .badge-sport {
-    background: #4CAF50;
+    background: var(--accent-light, #60a5fa);
   }
 
   .tournament-main-image {
@@ -253,10 +270,11 @@
   }
 
   .tournament-info-section {
-    background: white;
+    background: var(--bg-card, white);
     padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow, rgba(0, 0, 0, 0.1));
+    color: var(--text-primary, #333);
   }
 
   .info-grid {
@@ -274,12 +292,12 @@
 
   .info-label {
     font-weight: 600;
-    color: #666;
+    color: var(--text-secondary, #666);
     font-size: 0.9rem;
   }
 
   .info-value {
-    color: #333;
+    color: var(--text-primary, #333);
     font-size: 1.1rem;
   }
 
@@ -299,7 +317,7 @@
   .prizes-section h3,
   .contact-section h3,
   .teams-section h3 {
-    color: #333;
+    color: var(--text-primary, #333);
     margin-bottom: 15px;
   }
 
@@ -356,7 +374,7 @@
 
   .teams-list li {
     margin-bottom: 10px;
-    color: #333;
+    color: var(--text-primary, #333);
   }
 
   .btn-map {
@@ -371,7 +389,7 @@
   }
 
   .btn-map:hover {
-    background: #45a049;
+    background: var(--accent, #3b82f6);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
@@ -429,7 +447,7 @@
 
   /* Additional Details Section */
   .tournament-additional-details {
-    background: white;
+    background: var(--bg-card, white);
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -449,14 +467,14 @@
   }
 
   .detail-section h3 {
-    color: #333;
+    color: var(--text-primary, #333);
     font-size: 1.5rem;
     margin: 0 0 20px 0;
     font-weight: 600;
   }
 
   .detail-content {
-    color: #666;
+    color: var(--text-secondary, #666);
     line-height: 1.8;
     font-size: 1rem;
   }
@@ -476,12 +494,67 @@
   }
 
   .detail-content a {
-    color: #667eea;
+    color: var(--accent, #3b82f6);
     text-decoration: none;
   }
 
   .detail-content a:hover {
     text-decoration: underline;
+  }
+
+  .tournament-actions-header {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  .btn-like, .btn-share {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: 2px solid var(--accent, #3b82f6);
+    border-radius: 8px;
+    background: var(--bg-card, white);
+    color: var(--accent, #3b82f6);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-like:hover, .btn-share:hover {
+    background: var(--accent, #3b82f6);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  .btn-like.liked {
+    background: var(--accent, #3b82f6);
+    border-color: var(--accent, #3b82f6);
+    color: white;
+  }
+
+  .btn-like.liked:hover {
+    background: var(--accent-hover, #2563eb);
+    border-color: var(--accent-hover, #2563eb);
+  }
+
+  .like-icon, .share-icon {
+    font-size: 1.2rem;
+  }
+
+  .like-count {
+    background: rgba(0,0,0,0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+  }
+
+  .btn-like.liked .like-count {
+    background: rgba(255,255,255,0.2);
   }
 
   @media (max-width: 768px) {
@@ -508,5 +581,96 @@
     .tournament-theme-full table {
       font-size: 12px !important;
     }
+
+    .tournament-actions-header {
+      flex-direction: column;
+    }
+
+    .btn-like, .btn-share {
+      width: 100%;
+      justify-content: center;
+    }
   }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const likeBtn = document.getElementById('like-btn');
+    const shareBtn = document.getElementById('share-btn');
+    const likeCount = document.getElementById('like-count');
+    
+    if (likeBtn) {
+      likeBtn.addEventListener('click', function() {
+        const tournamentSlug = this.getAttribute('data-tournament-slug');
+        const isLiked = this.getAttribute('data-liked') === 'true';
+        const locale = '<%= I18n.locale %>';
+        const localePrefix = locale === 'en' ? '' : `/${locale}`;
+        const url = isLiked ? `${localePrefix}/tournaments/${tournamentSlug}/unlike` : `${localePrefix}/tournaments/${tournamentSlug}/like`;
+        
+        fetch(url, {
+          method: isLiked ? 'DELETE' : 'POST',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin'
+        })
+        .then(response => {
+          if (response.status === 401) {
+            return response.json().then(data => {
+              if (data.redirect) {
+                window.location.href = data.redirect;
+              } else {
+                window.location.href = '<%= new_user_session_path %>';
+              }
+              return null;
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (!data) return; // User was redirected
+          if (data && data.success) {
+            this.classList.toggle('liked');
+            this.setAttribute('data-liked', !isLiked);
+            likeCount.textContent = data.like_count;
+            const likeText = this.querySelector('.like-text');
+            likeText.textContent = !isLiked ? '<%= t('tournament.unlike') %>' : '<%= t('tournament.like') %>';
+          } else if (data && data.message) {
+            if (data.redirect) {
+              window.location.href = data.redirect;
+            } else {
+              alert(data.message || 'An error occurred');
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred. Please try again.');
+        });
+      });
+    }
+    
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function() {
+        const url = this.getAttribute('data-url');
+        const title = this.getAttribute('data-title');
+        
+        if (navigator.share) {
+          navigator.share({
+            title: title,
+            url: url
+          }).catch(err => console.log('Error sharing', err));
+        } else {
+          // Fallback: Copy to clipboard
+          navigator.clipboard.writeText(url).then(() => {
+            alert('<%= t('tournament.link_copied') %>');
+          }).catch(err => {
+            // Fallback: Show URL in prompt
+            prompt('<%= t('tournament.copy_link') %>', url);
+          });
+        }
+      });
+    }
+  });
+</script>

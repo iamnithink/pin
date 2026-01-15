@@ -23,7 +23,9 @@ class Api::V1::SportsController < Api::V1::BaseController
       active: sport.active
     }
     if include_matches
-      data[:matches] = sport.matches.approved.upcoming.limit(10).map { |m| serialize_match(m) }
+      # Eager load venue to avoid N+1 queries
+      matches = sport.matches.approved.upcoming.includes(:venue).limit(10)
+      data[:matches] = matches.map { |m| serialize_match(m) }
     end
     data
   end

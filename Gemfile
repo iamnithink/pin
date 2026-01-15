@@ -32,9 +32,11 @@ gem 'cancancan', '~> 3.5'
 gem 'omniauth', '~> 2.1'
 gem 'omniauth-google-oauth2', '~> 1.1'
 
-# Image Processing
+# Image Processing & Cloud Storage (Free Tier)
 gem 'image_processing', '~> 1.12'
 gem 'mini_magick', '~> 4.12'
+gem 'cloudinary', '~> 2.0', require: false # Free tier: 25GB storage, 25GB bandwidth/month
+gem 'activestorage-cloudinary-service' # ActiveStorage adapter for Cloudinary
 
 # Caching & Performance
 gem 'rack-mini-profiler', '~> 3.1', group: :development

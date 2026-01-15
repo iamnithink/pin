@@ -2,6 +2,8 @@ ActiveAdmin.register Team do
   includes :sport, :captain
   permit_params :name, :description, :sport_id, :captain_id, :is_active, :is_default
 
+  menu priority: 3, label: "Teams", if: proc { current_user&.admin? || current_user&.super_admin? }
+
   index do
     selectable_column
     id_column
@@ -67,9 +69,22 @@ ActiveAdmin.register Team do
 
   # Use FriendlyId slugs in admin URLs
   controller do
+    skip_authorization_check
+    
+    # Block regular users from accessing this resource
+    before_action :restrict_regular_users!
+    
     def find_resource(param = nil)
       id_or_slug = param || params[:id]
       Team.friendly.find(id_or_slug)
+    end
+    
+    private
+    
+    def restrict_regular_users!
+      if current_user.present? && current_user.regular_user?
+        redirect_to admin_root_path, alert: 'You do not have permission to access this page.'
+      end
     end
   end
 end

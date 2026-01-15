@@ -32,8 +32,15 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Store uploaded files using Cloudinary in production (free tier: 25GB storage, 25GB bandwidth/month)
+  # Cloudinary provides CDN, automatic optimization, and better performance
+  # Requires CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables
+  if ENV['CLOUDINARY_CLOUD_NAME'].present?
+    config.active_storage.service = :cloudinary
+  else
+    Rails.logger.warn "WARNING: Cloudinary credentials not set. Using local storage in production. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET."
+    config.active_storage.service = :local
+  end
   config.active_storage.variant_processor = :mini_magick
 
   # Mount Action Cable outside main process or domain.

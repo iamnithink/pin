@@ -1,6 +1,8 @@
 ActiveAdmin.register CricketMatchType do
   permit_params :name, :team_size, :category, :sub_category, :description, :active
 
+  menu priority: 7, label: "Cricket Match Types", if: proc { current_user&.super_admin? }
+
   index do
     selectable_column
     id_column
@@ -53,9 +55,22 @@ ActiveAdmin.register CricketMatchType do
 
   # Use FriendlyId slugs in admin URLs
   controller do
+    skip_authorization_check
+    
+    # Block regular users from accessing this resource
+    before_action :restrict_regular_users!
+    
     def find_resource(param = nil)
       id_or_slug = param || params[:id]
       CricketMatchType.friendly.find(id_or_slug)
+    end
+    
+    private
+    
+    def restrict_regular_users!
+      if current_user.present? && current_user.regular_user?
+        redirect_to admin_root_path, alert: 'You do not have permission to access this page.'
+      end
     end
   end
 end

@@ -4,6 +4,8 @@ ActiveAdmin.register Venue do
                 :latitude, :longitude, :google_maps_link, :contact_phone, :contact_email,
                 :hourly_rate, :is_verified, :is_active, :created_by_id
 
+  menu priority: 5, label: "Venues", if: proc { current_user&.admin? || current_user&.super_admin? }
+
   index do
     selectable_column
     id_column
@@ -71,6 +73,21 @@ ActiveAdmin.register Venue do
       row :created_by
       row :created_at
       row :updated_at
+    end
+  end
+
+  controller do
+    skip_authorization_check
+    
+    # Block regular users from accessing this resource
+    before_action :restrict_regular_users!
+    
+    private
+    
+    def restrict_regular_users!
+      if current_user.present? && current_user.regular_user?
+        redirect_to admin_root_path, alert: 'You do not have permission to access this page.'
+      end
     end
   end
 end

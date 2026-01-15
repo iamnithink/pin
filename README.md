@@ -28,10 +28,13 @@ PIN is a location-based sports discovery platform that helps users find and crea
 ### Quick Start
 
 ```bash
-# Start services
+# 2. Install dependencies
+bundle install
+
+# 3. Start services
 docker-compose up -d
 
-# Setup database
+# 4. Setup database
 docker-compose exec web rails db:create db:migrate db:seed
 
 # Access application

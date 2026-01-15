@@ -1,0 +1,109 @@
+<div class="static-page">
+  <div class="container">
+    <h1><%= t('static.privacy_policy.title') %></h1>
+    <div class="content">
+      <p><%= t('static.privacy_policy.last_updated') %></p>
+      
+      <section>
+        <h2><%= t('static.privacy_policy.section1.title') %></h2>
+        <p><%= t('static.privacy_policy.section1.content') %></p>
+      </section>
+
+      <section>
+        <h2><%= t('static.privacy_policy.section2.title') %></h2>
+        <p><%= t('static.privacy_policy.section2.content') %></p>
+      </section>
+
+      <section>
+        <h2><%= t('static.privacy_policy.section3.title') %></h2>
+        <p><%= t('static.privacy_policy.section3.content') %></p>
+      </section>
+
+      <section>
+        <h2><%= t('static.privacy_policy.section4.title') %></h2>
+        <p><%= t('static.privacy_policy.section4.content') %></p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<style>
+  .static-page {
+    min-height: 100vh;
+    background: var(--bg-secondary, #f8fafc);
+    padding: 40px 0;
+  }
+
+  [data-theme="dark"] .static-page {
+    background: var(--bg-primary, #0f172a);
+  }
+
+  .static-page .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+    background: var(--bg-card, #ffffff);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px var(--shadow, rgba(15, 23, 42, 0.08));
+    padding: 40px;
+  }
+
+  [data-theme="dark"] .static-page .container {
+    background: var(--bg-card, #1e293b);
+    box-shadow: 0 2px 10px var(--shadow, rgba(0, 0, 0, 0.4));
+  }
+
+  .static-page h1 {
+    color: var(--text-primary, #1e293b);
+    margin-bottom: 30px;
+  }
+
+  [data-theme="dark"] .static-page h1 {
+    color: var(--text-primary, #f1f5f9);
+  }
+
+  .static-page section {
+    margin-bottom: 30px;
+  }
+
+  .static-page h2 {
+    color: var(--accent, #3b82f6);
+    margin-bottom: 15px;
+  }
+
+  .static-page p {
+    color: var(--text-secondary, #64748b);
+    line-height: 1.8;
+    margin-bottom: 15px;
+  }
+
+  [data-theme="dark"] .static-page p {
+    color: var(--text-secondary, #94a3b8);
+  }
+
+  @media (max-width: 768px) {
+    .static-page {
+      padding: 20px 0;
+    }
+
+    .static-page .container {
+      padding: 20px;
+      margin: 0 10px;
+    }
+
+    .static-page h1 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .static-page h2 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .static-page p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+  }
+</style>

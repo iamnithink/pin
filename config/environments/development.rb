@@ -32,7 +32,8 @@ Rails.application.configure do
     config.cache_store = :null_store
   end
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
+  # Store uploaded files locally in development (for faster development, no external dependencies)
+  # Production uses Cloudinary for better performance and CDN
   config.active_storage.variant_processor = :mini_magick
   config.active_storage.service = :local
 

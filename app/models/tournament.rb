@@ -12,12 +12,23 @@ class Tournament < ApplicationRecord
   has_many :participants, through: :tournament_participants, source: :user
   has_many :tournament_teams, dependent: :destroy
   has_many :teams, through: :tournament_teams
+  has_many :tournament_likes, dependent: :destroy
+  has_many :liked_by_users, through: :tournament_likes, source: :user
 
   # ActionText for rules and regulations
   has_rich_text :rules_and_regulations
 
-  # ActiveStorage - for tournament image upload
-  has_one_attached :image
+  # ActiveStorage - for tournament image upload (Cloudinary free tier: 25GB storage, 25GB bandwidth/month)
+  has_one_attached :image do |attachable|
+    attachable.variant :thumb, resize_to_limit: [300, 300]
+    attachable.variant :medium, resize_to_limit: [800, 800]
+  end
+  
+  # Virtual attribute for image deletion checkbox in ActiveAdmin
+  attr_accessor :remove_image
+  
+  # Validate image if attached
+  validate :validate_image, if: -> { image.attached? }
 
   # Serialize prizes JSON
   serialize :prizes_json, coder: JSON, type: Hash
@@ -123,6 +134,20 @@ class Tournament < ApplicationRecord
   def image_or_theme_present
     return if image.attached? || tournament_theme.present?
     errors.add(:base, 'Either tournament image or theme must be selected before publishing')
+  end
+
+  def validate_image
+    return unless image.attached?
+    
+    # Check file size (max 10MB)
+    if image.byte_size > 10.megabytes
+      errors.add(:image, 'is too large. Maximum size is 10MB.')
+    end
+    
+    # Check content type
+    unless image.content_type.in?(%w[image/jpeg image/jpg image/png image/gif image/webp])
+      errors.add(:image, 'must be a JPEG, PNG, GIF, or WebP image.')
+    end
   end
 
   def increment_view_count

@@ -235,7 +235,8 @@ Devise.setup do |config|
   # config.default_scope = :user
 
   # Set this configuration to false if you want to use /users/sign_out without sign_out_via.
-  # config.sign_out_via = :get
+  # Allow both DELETE and GET for sign_out for better compatibility
+  config.sign_out_via = [:delete, :get]
 
   # ==> OmniAuth
   # Add a new OmniAuth provider. Check the wiki for more information on setting

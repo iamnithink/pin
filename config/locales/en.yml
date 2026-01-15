@@ -1,0 +1,152 @@
+en:
+  app:
+    name: "PIN - PlayInNear"
+    subtitle: "Discover Sports Tournaments Near You"
+  
+  home:
+    title: "🏆 PIN - PlayInNear"
+    subtitle: "Discover Sports Tournaments Near You"
+    filters:
+      sport: "Sport"
+      all_sports: "All Sports"
+      start_date: "Start Date"
+      search: "Search"
+      search_placeholder: "Search tournaments..."
+      use_location: "📍 Use My Location"
+      filter: "🔍 Filter"
+      clear: "Clear"
+      location_active: "📍 Location-based sorting active"
+    tournaments:
+      title: "All Tournaments"
+      count: "(%{count})"
+      no_tournaments: "No tournaments found"
+      no_tournaments_message: "Try adjusting your filters or check back later for new tournaments."
+      view_details: "View Details"
+      map: "🗺️ Map"
+      km_away: "%{distance} km away"
+      prize_pool: "🏆 Prize Pool:"
+      see_details: "See Details"
+      location_tbd: "Location TBD"
+  
+  tournament:
+    back: "← Back to Tournaments"
+    details: "Tournament Details"
+    start_time: "📅 Start Time"
+    end_time: "🏁 End Time"
+    venue: "📍 Venue"
+    entry_fee: "💰 Entry Fee"
+    organized_by: "👤 Organized By"
+    description: "Description"
+    rules: "Rules & Regulations"
+    prize_pool: "🏆 Prize Pool"
+    contact: "📞 Contact"
+    teams: "👥 Teams"
+    view_map: "🗺️ View on Google Maps"
+    first_place: "1st Place"
+    second_place: "2nd Place"
+    third_place: "3rd Place"
+    like: "Like"
+    unlike: "Unlike"
+    share: "Share"
+    link_copied: "Link copied to clipboard!"
+    copy_link: "Copy this link:"
+  
+  common:
+    loading: "Loading..."
+    error: "Error"
+    success: "Success"
+    save: "Save"
+    cancel: "Cancel"
+    delete: "Delete"
+    edit: "Edit"
+    create: "Create"
+    update: "Update"
+    back: "Back"
+    next: "Next"
+    previous: "Previous"
+  
+  language:
+    select: "Select Language"
+    english: "English"
+    hindi: "हिंदी"
+    kannada: "ಕನ್ನಡ"
+    malayalam: "മലയാളം"
+  
+  footer:
+    about:
+      title: "About Us"
+      description: "PIN (PlayInNear) helps you discover and participate in sports tournaments near you."
+    quick_links:
+      title: "Quick Links"
+      home: "Home"
+      about: "About"
+      contact: "Contact"
+    legal:
+      title: "Legal"
+      privacy_policy: "Privacy Policy"
+      terms_conditions: "Terms & Conditions"
+    connect:
+      title: "Connect With Us"
+    copyright: "All rights reserved."
+  
+  static:
+    privacy_policy:
+      title: "Privacy Policy"
+      last_updated: "Last updated: January 2024"
+      section1:
+        title: "Information We Collect"
+        content: "We collect information that you provide directly to us, such as when you create an account, register for a tournament, or contact us for support."
+      section2:
+        title: "How We Use Your Information"
+        content: "We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you."
+      section3:
+        title: "Information Sharing"
+        content: "We do not sell, trade, or rent your personal information to third parties. We may share information only as described in this policy."
+      section4:
+        title: "Data Security"
+        content: "We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction."
+    terms_conditions:
+      title: "Terms & Conditions"
+      last_updated: "Last updated: January 2024"
+      section1:
+        title: "Acceptance of Terms"
+        content: "By accessing and using this website, you accept and agree to be bound by the terms and provision of this agreement."
+      section2:
+        title: "User Responsibilities"
+        content: "Users are responsible for maintaining the confidentiality of their account information and for all activities that occur under their account."
+      section3:
+        title: "Limitation of Liability"
+        content: "PIN (PlayInNear) shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the service."
+    about:
+      title: "About Us"
+      description: "PIN (PlayInNear) is a location-based sports discovery platform that helps users find and create nearby sports tournaments."
+      mission: "Our mission is to connect sports enthusiasts and make it easy to discover and participate in local sports events."
+    contact:
+      title: "Contact Us"
+      description: "Have questions? We'd love to hear from you."
+      email: "Email"
+      phone: "Phone"
+  
+  devise:
+    shared:
+      sign_in: "Sign in"
+      sign_up: "Sign up"
+      sign_out: "Sign out"
+      forgot_password: "Forgot your password?"
+    sessions:
+      new:
+        title: "Sign in"
+        email: "Email"
+        password: "Password"
+        remember_me: "Remember me"
+        submit: "Sign in"
+    registrations:
+      new:
+        title: "Sign up"
+        name: "Full Name"
+        email: "Email"
+        phone: "Phone Number"
+        password: "Password"
+        password_confirmation: "Password Confirmation"
+        characters_minimum: "characters minimum"
+        submit: "Sign up"

@@ -6,13 +6,16 @@ class Api::V1::TournamentsController < Api::V1::BaseController
       sport_id: params[:sport_id],
       pincode: params[:pincode],
       status: params[:status] || 'published'
-    ).limit(params[:limit] || 20)
+    )
+    .includes(:sport, :tournament_theme, :venue, :created_by, :cricket_match_type, image_attachment: :blob)
+    .limit(params[:limit] || 20)
 
     render_success(tournaments.map { |t| serialize_tournament(t) })
   end
 
   def show
-    tournament = Tournament.find_by!(slug: params[:id])
+    tournament = Tournament.includes(:sport, :tournament_theme, :venue, :created_by, :cricket_match_type, image_attachment: :blob)
+                          .find_by!(slug: params[:id])
     render_success(serialize_tournament(tournament, detailed: true))
   end
 
@@ -50,6 +53,7 @@ class Api::V1::TournamentsController < Api::V1::BaseController
     tournaments = Tournament.published
                    .nearby(lat, lng, radius)
                    .upcoming
+                   .includes(:sport, :tournament_theme, :venue, :created_by, :cricket_match_type, image_attachment: :blob)
                    .limit(params[:limit] || 20)
 
     render_success(tournaments.map { |t| serialize_tournament(t) })
@@ -57,7 +61,9 @@ class Api::V1::TournamentsController < Api::V1::BaseController
 
   def by_pincode
     pincode = params[:pincode]
-    tournaments = Tournament.discovery(pincode: pincode).limit(params[:limit] || 20)
+    tournaments = Tournament.discovery(pincode: pincode)
+                          .includes(:sport, :tournament_theme, :venue, :created_by, :cricket_match_type, image_attachment: :blob)
+                          .limit(params[:limit] || 20)
     render_success(tournaments.map { |t| serialize_tournament(t) })
   end
 
@@ -133,8 +139,11 @@ class Api::V1::TournamentsController < Api::V1::BaseController
     end
 
     if detailed
-      data[:participants] = tournament.participants.map { |p| { id: p.id, name: p.name } }
-      data[:teams] = tournament.teams.map { |t| { id: t.id, name: t.name, is_default: t.is_default? } }
+      # Eager load participants and teams to avoid N+1 queries
+      participants = tournament.participants.includes(:user)
+      teams = tournament.teams.includes(:sport)
+      data[:participants] = participants.map { |p| { id: p.user.id, name: p.user.name } }
+      data[:teams] = teams.map { |t| { id: t.id, name: t.name, is_default: t.is_default? } }
       data[:can_join] = current_user ? tournament.can_join?(current_user) : false
     end
 

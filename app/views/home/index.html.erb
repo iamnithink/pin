@@ -2,8 +2,25 @@
   <!-- Header Section -->
   <header class="home-header">
     <div class="container">
-      <h1 class="home-title">🏆 PIN - PlayInNear</h1>
-      <p class="home-subtitle">Discover Sports Tournaments Near You</p>
+      <div class="header-content">
+        <div class="logo-container">
+          <%= image_tag 'logo.png', alt: 'PIN - PlayInNear', class: 'site-logo' %>
+        </div>
+        <div class="header-auth">
+          <% if user_signed_in? %>
+            <span class="user-name"><%= current_user.name %></span>
+            <% if current_user.admin? || current_user.super_admin? %>
+              <%= link_to 'ActiveAdmin', admin_root_path, class: "auth-link", target: '_blank' %>
+            <% else %>
+              <%= link_to 'My Tournaments', admin_tournaments_path, class: "auth-link", target: '_blank' %>
+            <% end %>
+            <%= button_to t('devise.shared.sign_out'), destroy_user_session_path, method: :delete, class: "auth-link signout-btn", form: { class: "signout-form" } %>
+          <% else %>
+            <%= link_to t('devise.shared.sign_in'), new_user_session_path, class: "auth-link" %>
+            <%= link_to t('devise.shared.sign_up'), new_user_registration_path, class: "auth-link auth-link-primary" %>
+          <% end %>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -14,9 +31,9 @@
         <div class="filters-grid">
           <!-- Sport Filter -->
           <div class="filter-group">
-            <label for="sport_id" class="filter-label">Sport</label>
+            <label for="sport_id" class="filter-label"><%= t('home.filters.sport') %></label>
             <select name="sport_id" id="sport_id" class="filter-select">
-              <option value="" <%= 'selected' unless @selected_sport_id.present? %>>All Sports</option>
+              <option value="" <%= 'selected' unless @selected_sport_id.present? %>><%= t('home.filters.all_sports') %></option>
               <% @sports.each do |sport| %>
                 <option value="<%= sport.id %>" <%= 'selected' if @selected_sport_id == sport.id.to_s %>>
                   <%= sport.icon %> <%= sport.name %>
@@ -27,28 +44,28 @@
 
           <!-- Date Filter -->
           <div class="filter-group">
-            <label for="start_date" class="filter-label">Start Date</label>
+            <label for="start_date" class="filter-label"><%= t('home.filters.start_date') %></label>
             <input type="date" name="start_date" id="start_date" class="filter-input" value="<%= @start_date %>">
           </div>
 
           <!-- Search Filter -->
           <div class="filter-group filter-group-search">
-            <label for="search" class="filter-label">Search</label>
-            <input type="text" name="search" id="search" class="filter-input" placeholder="Search tournaments..." value="<%= @search_query %>">
+            <label for="search" class="filter-label"><%= t('home.filters.search') %></label>
+            <input type="text" name="search" id="search" class="filter-input" placeholder="<%= t('home.filters.search_placeholder') %>" value="<%= @search_query %>">
           </div>
 
           <!-- Location Button -->
           <div class="filter-group">
             <label class="filter-label">&nbsp;</label>
             <button type="button" id="get-location-btn" class="btn-location">
-              📍 Use My Location
+              <%= t('home.filters.use_location') %>
             </button>
           </div>
 
           <!-- Submit Button -->
           <div class="filter-group">
             <label class="filter-label">&nbsp;</label>
-            <button type="submit" class="btn-filter">🔍 Filter</button>
+            <button type="submit" class="btn-filter"><%= t('home.filters.filter') %></button>
           </div>
         </div>
 
@@ -58,9 +75,9 @@
       </form>
 
       <!-- Location Status -->
-      <div id="location-status" class="location-status" style="display: none;">
+      <div id="location-status" class="location-status" style="display: none;" data-location-active="<%= t('home.filters.location_active') %>">
         <span id="location-text"></span>
-        <button type="button" id="clear-location" class="btn-clear-location">Clear</button>
+        <button type="button" id="clear-location" class="btn-clear-location"><%= t('home.filters.clear') %></button>
       </div>
     </div>
   </section>
@@ -71,11 +88,12 @@
       <div class="tournaments-header">
         <h2 class="section-title">
           <% if @selected_sport_id.present? %>
-            <%= @sports.find { |s| s.id.to_s == @selected_sport_id.to_s }&.name || 'Tournaments' %>
+            <% selected_sport = @sports.find { |s| s.id.to_s == @selected_sport_id.to_s } %>
+            <%= selected_sport&.name || t('home.tournaments.title') %>
           <% else %>
-            All Tournaments
+            <%= t('home.tournaments.title') %>
           <% end %>
-          <span class="tournament-count">(<%= @tournaments.count %>)</span>
+          <span class="tournament-count"><%= t('home.tournaments.count', count: @tournaments.size) %></span>
         </h2>
       </div>
 
@@ -86,9 +104,20 @@
               <!-- Tournament Image or Limited Theme Preview -->
               <div class="tournament-image">
                 <% if tournament.image.attached? %>
-                  <%= image_tag tournament.image, alt: tournament.title, class: "card-image" %>
+                  <%= optimized_image_tag tournament.image, 
+                      alt: tournament.title, 
+                      class: "card-image",
+                      width: 400,
+                      quality: 'auto:good',
+                      format: 'auto',
+                      loading: 'lazy',
+                      decoding: 'async' %>
                 <% elsif tournament.tournament_theme.present? && tournament.tournament_theme.preview_image_url.present? %>
-                  <%= image_tag tournament.tournament_theme.preview_image_url, alt: tournament.title, class: "card-image" %>
+                  <%= image_tag tournament.tournament_theme.preview_image_url, 
+                      alt: tournament.title, 
+                      class: "card-image",
+                      loading: 'lazy',
+                      decoding: 'async' %>
                 <% elsif tournament.tournament_theme.present? %>
                   <!-- Limited theme preview - just show theme name and key info -->
                   <div class="card-theme-preview">
@@ -103,7 +132,7 @@
                       </div>
                       <div class="preview-info-item">
                         <span>📍</span>
-                        <span><%= tournament.venue_name.presence || tournament.venue&.name || 'TBD' %></span>
+                        <span><%= tournament.venue_name.presence || tournament.venue&.name || t('home.tournaments.location_tbd') %></span>
                       </div>
                       <% if tournament.entry_fee.present? %>
                         <div class="preview-info-item">
@@ -140,11 +169,11 @@
                   
                   <div class="meta-item">
                     <span class="meta-icon">📍</span>
-                    <span class="meta-text">
-                      <% venue_display = tournament.venue_name.presence %>
-                      <% venue_display ||= tournament.venue&.name if tournament.venue_id.present? %>
-                      <%= venue_display || 'Location TBD' %>
-                    </span>
+                      <span class="meta-text">
+                        <% venue_display = tournament.venue_name.presence %>
+                        <% venue_display ||= tournament.venue&.name if tournament.venue_id.present? %>
+                        <%= venue_display || t('home.tournaments.location_tbd') %>
+                      </span>
                   </div>
                   
                   <% if tournament.entry_fee.present? %>
@@ -164,12 +193,12 @@
                 <!-- Prize Info -->
                 <% if tournament.first_prize.present? || tournament.prizes_json.present? %>
                   <div class="tournament-prizes">
-                    <span class="prize-label">🏆 Prize Pool:</span>
+                    <span class="prize-label"><%= t('home.tournaments.prize_pool') %></span>
                     <span class="prize-amount">
                       <% if tournament.first_prize.present? %>
                         ₹<%= tournament.first_prize.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse %>
                       <% else %>
-                        See Details
+                        <%= t('home.tournaments.see_details') %>
                       <% end %>
                     </span>
                   </div>
@@ -181,20 +210,45 @@
                   <% if distance.present? %>
                     <div class="tournament-distance">
                       <span class="distance-icon">📏</span>
-                      <span class="distance-text"><%= distance %> km away</span>
+                      <span class="distance-text"><%= t('home.tournaments.km_away', distance: distance) %></span>
                     </div>
                   <% end %>
                 <% end %>
 
+                <!-- Like and Share Buttons -->
+                <div class="tournament-social-actions" style="display: flex; flex-direction: row; gap: 12px; align-items: center;">
+                  <%# Likes disabled in public view; ActiveAdmin users can manage likes in admin %>
+                  <div class="like-disabled" title="Likes available for signed-in admins only" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="like-icon-card">❤️</span>
+                    <span class="like-count-card"><%= tournament.likes_count || 0 %></span>
+                  </div>
+                  
+                  <% share_url = url_for(controller: 'tournaments', action: 'show', slug: tournament.slug, locale: I18n.locale, only_path: false) %>
+                  <% share_image = tournament.image.attached? ? optimized_image_url(tournament.image, width: 1200, quality: 'auto:good') : (tournament.tournament_theme&.preview_image_url || '') %>
+                  <button class="btn-share-card" 
+                          data-url="<%= share_url %>"
+                          data-title="<%= tournament.title %>"
+                          data-description="<%= truncate(tournament.description || '', length: 150) %>"
+                          data-image="<%= share_image %>"
+                          data-sport="<%= tournament.sport.name %>"
+                          data-date="<%= tournament.start_time.strftime('%B %d, %Y at %I:%M %p') %>"
+                          data-venue="<%= tournament.venue_name.presence || tournament.venue&.name || 'TBD' %>"
+                          data-entry-fee="<%= tournament.entry_fee.present? ? "₹#{tournament.entry_fee}" : 'Free' %>"
+                          data-tournament-id="<%= tournament.id %>"
+                          style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="share-icon-card">🔗</span>
+                  </button>
+                </div>
+
                 <!-- Action Buttons -->
                 <div class="tournament-actions">
-                  <a href="<%= tournament_path(tournament.slug) %>" class="btn-view-details" style="text-decoration: none; display: block; text-align: center;">View Details</a>
+                  <a href="<%= tournament_path(tournament.slug) %>" class="btn-view-details" style="text-decoration: none; display: block; text-align: center;"><%= t('home.tournaments.view_details') %></a>
                   <% gmap_link = tournament.venue_google_maps_link.presence %>
                   <% if gmap_link.blank? && tournament.venue_id.present? %>
                     <% gmap_link = tournament.venue&.google_maps_link %>
                   <% end %>
                   <% if gmap_link.present? %>
-                    <a href="<%= gmap_link %>" target="_blank" class="btn-map-link">🗺️ Map</a>
+                    <a href="<%= gmap_link %>" target="_blank" class="btn-map-link"><%= t('home.tournaments.map') %></a>
                   <% end %>
                 </div>
               </div>
@@ -204,8 +258,8 @@
       <% else %>
         <div class="no-tournaments">
           <div class="no-tournaments-icon">🏟️</div>
-          <h3>No tournaments found</h3>
-          <p>Try adjusting your filters or check back later for new tournaments.</p>
+          <h3><%= t('home.tournaments.no_tournaments') %></h3>
+          <p><%= t('home.tournaments.no_tournaments_message') %></p>
         </div>
       <% end %>
     </div>
@@ -220,16 +274,101 @@
 
   .home-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
     padding-bottom: 40px;
   }
 
-  /* Header */
+  [data-theme="dark"] .home-container {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  }
+
+  /* Header - Compact Design */
   .home-header {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 30px 0;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
+    background: var(--bg-card, #ffffff);
+    padding: 12px 0;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+  }
+
+  [data-theme="dark"] .home-header {
+    background: var(--bg-card, #1e293b);
+    border-bottom-color: var(--border-color, #334155);
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .header-auth {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .auth-link {
+    padding: 8px 16px;
+    text-decoration: none;
+    color: var(--accent, #3b82f6);
+    border: 2px solid var(--accent, #3b82f6);
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .auth-link:hover {
+    background: var(--accent, #3b82f6);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+
+  .auth-link-primary {
+    background: var(--accent, #3b82f6);
+    color: white;
+  }
+
+  .auth-link-primary:hover {
+    background: var(--accent-hover, #2563eb);
+  }
+
+  .signout-form {
+    display: inline;
+    margin: 0;
+    padding: 0;
+  }
+
+  .signout-btn {
+    background: none;
+    border: 2px solid var(--accent, #3b82f6);
+    color: var(--accent, #3b82f6);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+  }
+
+  .signout-btn:hover {
+    background: var(--accent, #3b82f6);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+
+  .user-name {
+    color: var(--text-primary, #1e293b);
+    font-weight: 600;
+    font-size: 0.95rem;
   }
 
   .container {
@@ -238,27 +377,86 @@
     padding: 0 20px;
   }
 
+  .logo-container {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .site-logo {
+    height: 60px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: transform 0.3s ease;
+  }
+
+  .site-logo:hover {
+    transform: scale(1.05);
+  }
+
+  [data-theme="dark"] .site-logo {
+    filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.1)) brightness(1.05);
+  }
+
+  @media (max-width: 768px) {
+    .header-content {
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .logo-container {
+      justify-content: center;
+    }
+    
+    .header-auth {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .site-logo {
+      height: 50px;
+    }
+  }
+
   .home-title {
     font-size: 2.5rem;
     font-weight: bold;
-    color: #333;
+    color: var(--text-primary, #333);
     margin: 0 0 10px 0;
     text-align: center;
   }
 
+  [data-theme="dark"] .home-title {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
   .home-subtitle {
     font-size: 1.2rem;
-    color: #666;
+    color: var(--text-secondary, #666);
     text-align: center;
     margin: 0;
   }
 
+  [data-theme="dark"] .home-subtitle {
+    color: #e0e0e0;
+  }
+
   /* Filters Section */
   .filters-section {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
     padding: 25px 0;
     margin-bottom: 30px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow, rgba(15, 23, 42, 0.08));
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+  }
+
+  [data-theme="dark"] .filters-section {
+    background: rgba(30, 41, 59, 0.9);
+    border-bottom-color: var(--border-color, #334155);
   }
 
   .filters-form {
@@ -283,26 +481,31 @@
 
   .filter-label {
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary, #1e293b);
     margin-bottom: 8px;
     font-size: 0.9rem;
+  }
+
+  [data-theme="dark"] .filter-label {
+    color: var(--text-primary, #f1f5f9);
   }
 
   .filter-select,
   .filter-input {
     padding: 12px 15px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--border-color, #e0e0e0);
     border-radius: 8px;
     font-size: 1rem;
     transition: all 0.3s ease;
-    background: white;
+    background: var(--bg-primary, white);
+    color: var(--text-primary, #333);
   }
 
   .filter-select:focus,
   .filter-input:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--accent, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
   .btn-location,
@@ -318,32 +521,33 @@
   }
 
   .btn-location {
-    background: #4CAF50;
+    background: var(--accent, #3b82f6);
     color: white;
   }
 
   .btn-location:hover {
-    background: #45a049;
+    background: var(--accent-hover, #2563eb);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
 
   .btn-filter {
-    background: #667eea;
+    background: var(--accent, #3b82f6);
     color: white;
   }
 
   .btn-filter:hover {
-    background: #5568d3;
+    background: var(--accent-hover, #2563eb);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
 
   .location-status {
     margin-top: 15px;
     padding: 12px 15px;
-    background: #e8f5e9;
-    border-left: 4px solid #4CAF50;
+    background: #dbeafe;
+    color: var(--text-primary, #1e293b);
+    border-left: 4px solid var(--accent, #3b82f6);
     border-radius: 4px;
     display: flex;
     justify-content: space-between;
@@ -352,7 +556,7 @@
 
   .btn-clear-location {
     padding: 6px 12px;
-    background: #f44336;
+    background: #f97373;
     color: white;
     border: none;
     border-radius: 4px;
@@ -389,10 +593,11 @@
 
   /* Tournament Card */
   .tournament-card {
-    background: white;
+    background: var(--bg-card, white);
     border-radius: 12px;
+    color: var(--text-primary, #333);
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px var(--shadow, rgba(0, 0, 0, 0.1));
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
@@ -400,7 +605,7 @@
 
   .tournament-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 15px var(--shadow, rgba(0, 0, 0, 0.2));
   }
 
   /* Tournament Theme Wrapper - Full Theme Display */
@@ -474,7 +679,7 @@
     width: 100%;
     height: 200px;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
   }
 
   .card-image {
@@ -496,7 +701,7 @@
   .card-theme-placeholder {
     flex-direction: column;
     gap: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
   }
 
   .theme-name {
@@ -514,7 +719,7 @@
   .card-theme-preview {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -579,7 +784,7 @@
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary, #333);
   }
 
   .tournament-content {
@@ -589,21 +794,35 @@
     flex-direction: column;
   }
 
+  /* Force horizontal layout for social actions */
+  .tournament-content .tournament-social-actions,
+  .tournament-card .tournament-social-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .tournament-content .tournament-social-actions > *,
+  .tournament-card .tournament-social-actions > * {
+    display: inline-flex !important;
+    flex-direction: row !important;
+  }
+
   .tournament-title {
     font-size: 1.4rem;
     font-weight: bold;
     margin: 0 0 15px 0;
-    color: #333;
+    color: var(--text-primary, #333);
   }
 
   .tournament-link {
-    color: #333;
+    color: var(--text-primary, #333);
     text-decoration: none;
     transition: color 0.3s ease;
   }
 
   .tournament-link:hover {
-    color: #667eea;
+    color: var(--accent, #3b82f6);
   }
 
   .tournament-meta {
@@ -618,7 +837,7 @@
     align-items: center;
     gap: 10px;
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-secondary, #666);
   }
 
   .meta-icon {
@@ -637,7 +856,7 @@
   }
 
   .tournament-description {
-    color: #666;
+    color: var(--text-secondary, #666);
     font-size: 0.9rem;
     line-height: 1.6;
     margin: 0 0 15px 0;
@@ -686,7 +905,7 @@
   .btn-view-details {
     flex: 1;
     padding: 12px 20px;
-    background: #667eea;
+    background: var(--accent, #3b82f6);
     color: white;
     border: none;
     border-radius: 8px;
@@ -696,13 +915,14 @@
   }
 
   .btn-view-details:hover {
-    background: #5568d3;
+    background: var(--accent-hover, #2563eb);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
 
   .btn-map-link {
     padding: 12px 20px;
-    background: #4CAF50;
+    background: var(--accent-light, #60a5fa);
     color: white;
     text-decoration: none;
     border-radius: 8px;
@@ -712,17 +932,18 @@
   }
 
   .btn-map-link:hover {
-    background: #45a049;
+    background: var(--accent, #3b82f6);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
 
   /* No Tournaments */
   .no-tournaments {
     text-align: center;
     padding: 60px 20px;
-    background: white;
+    background: var(--bg-card, white);
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px var(--shadow, rgba(0, 0, 0, 0.1));
   }
 
   .no-tournaments-icon {
@@ -731,16 +952,20 @@
   }
 
   .no-tournaments h3 {
-    color: #333;
+    color: var(--text-primary, #333);
     margin-bottom: 10px;
   }
 
   .no-tournaments p {
-    color: #666;
+    color: var(--text-secondary, #666);
   }
 
   /* Responsive Design */
   @media (max-width: 768px) {
+    .site-logo {
+      height: 90px;
+    }
+
     .home-title {
       font-size: 2rem;
     }
@@ -757,9 +982,228 @@
       grid-template-columns: 1fr;
     }
 
-    .tournament-actions {
-      flex-direction: column;
+  .tournament-actions {
+    flex-direction: column;
+  }
+
+  /* Like and Share Buttons - Horizontal Layout */
+  .tournament-social-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 12px;
+    margin-bottom: 15px;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    clear: both;
+  }
+
+  .tournament-social-actions > * {
+    display: inline-flex !important;
+    flex-shrink: 0 !important;
+  }
+
+  .like-disabled {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border: 2px solid var(--border-color, #e0e0e0);
+    border-radius: 8px;
+    background: var(--bg-card, white);
+    color: var(--text-secondary, #666);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: not-allowed;
+    opacity: 0.7;
+    flex: 0 0 auto !important;
+    min-width: fit-content;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .btn-like-card, .btn-share-card {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border: 2px solid var(--border-color, #e0e0e0);
+    border-radius: 8px;
+    background: var(--bg-card, white);
+    color: var(--text-secondary, #666);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 0 0 auto !important;
+    min-width: fit-content;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .tournament-social-actions {
+      gap: 8px;
+      margin-bottom: 12px;
     }
+
+    .like-disabled,
+    .btn-like-card,
+    .btn-share-card {
+      padding: 8px 14px;
+      font-size: 0.85rem;
+    }
+
+    .like-icon-card,
+    .share-icon-card {
+      font-size: 1rem;
+    }
+
+    .like-count-card {
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .tournament-social-actions {
+      gap: 6px;
+    }
+
+    .like-disabled,
+    .btn-like-card,
+    .btn-share-card {
+      padding: 8px 12px;
+      font-size: 0.8rem;
+    }
+  }
+
+  .btn-like-card:hover, .btn-share-card:hover {
+    border-color: var(--accent, #3b82f6);
+    color: var(--accent, #3b82f6);
+    background: var(--bg-secondary, #f8fafc);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+  }
+
+  .btn-like-card.liked {
+    background: #e74c3c;
+    border-color: #e74c3c;
+    color: white;
+    box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+  }
+
+  .btn-like-card.liked:hover {
+    background: #c0392b;
+    border-color: #c0392b;
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
+  }
+
+  .like-icon-card, .share-icon-card {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .like-count-card {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  [data-theme="dark"] .like-disabled,
+  [data-theme="dark"] .btn-like-card,
+  [data-theme="dark"] .btn-share-card {
+    background: var(--bg-card, #2d2d2d);
+    border-color: var(--border-color, #404040);
+    color: var(--text-primary, #ffffff);
+  }
+
+  [data-theme="dark"] .btn-like-card:hover,
+  [data-theme="dark"] .btn-share-card:hover {
+    background: var(--bg-secondary, #3d3d3d);
+    border-color: var(--accent, #7c8ef5);
+  }
+
+  /* Share Modal */
+  .share-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+
+  .share-modal-content {
+    background: var(--bg-card, white);
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .share-modal-content h3 {
+    margin: 0 0 20px 0;
+    color: var(--text-primary, #333);
+    text-align: center;
+  }
+
+  .share-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .share-option-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: var(--bg-card, white);
+    color: var(--text-primary, #333);
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .share-option-btn:hover {
+    border-color: var(--accent, #3b82f6);
+    background: #f0f9ff;
+    transform: translateY(-2px);
+  }
+
+  .share-option-btn span {
+    font-size: 1.5rem;
+  }
+
+  .share-close-btn {
+    width: 100%;
+    padding: 12px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .share-close-btn:hover {
+    background: #5a6268;
+  }
 
     /* Theme preview responsive adjustments for mobile */
     .card-theme-preview {
@@ -776,6 +1220,10 @@
   }
 
   @media (max-width: 480px) {
+    .site-logo {
+      height: 70px;
+    }
+
     .home-title {
       font-size: 1.5rem;
     }
@@ -801,13 +1249,17 @@
     const clearLocationBtn = document.getElementById('clear-location');
     const filtersForm = document.getElementById('tournament-filters');
 
+    // Get translation text
+    const locationActiveText = locationStatus.getAttribute('data-location-active');
+    const useLocationText = '<%= t('home.filters.use_location') %>';
+
     // Check if location is already set
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('latitude') && urlParams.get('longitude')) {
       latitudeInput.value = urlParams.get('latitude');
       longitudeInput.value = urlParams.get('longitude');
       locationStatus.style.display = 'flex';
-      locationText.textContent = '📍 Location-based sorting active';
+      locationText.textContent = locationActiveText;
     }
 
     // Get user location
@@ -822,9 +1274,9 @@
             longitudeInput.value = position.coords.longitude;
             
             locationStatus.style.display = 'flex';
-            locationText.textContent = '📍 Location-based sorting active';
+            locationText.textContent = locationActiveText;
             
-            getLocationBtn.textContent = '📍 Use My Location';
+            getLocationBtn.textContent = useLocationText;
             getLocationBtn.disabled = false;
 
             // Auto-submit form to refresh with location
@@ -832,7 +1284,7 @@
           },
           function(error) {
             alert('Unable to get your location. Please enable location services.');
-            getLocationBtn.textContent = '📍 Use My Location';
+            getLocationBtn.textContent = useLocationText;
             getLocationBtn.disabled = false;
           }
         );
@@ -877,5 +1329,174 @@
         // filtersForm.submit();
       }, 1000);
     });
+
+    // Like button functionality
+    document.querySelectorAll('.btn-like-card').forEach(function(likeBtn) {
+      likeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const tournamentSlug = this.getAttribute('data-tournament-slug');
+        const isLiked = this.getAttribute('data-liked') === 'true';
+        const likeCountEl = this.querySelector('.like-count-card');
+        const locale = '<%= I18n.locale %>';
+        const localePrefix = locale === 'en' ? '' : `/${locale}`;
+        const url = isLiked ? `${localePrefix}/tournaments/${tournamentSlug}/unlike` : `${localePrefix}/tournaments/${tournamentSlug}/like`;
+        
+        fetch(url, {
+          method: isLiked ? 'DELETE' : 'POST',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin'
+        })
+        .then(response => {
+          if (response.status === 401) {
+            return response.json().then(data => {
+              if (data.redirect) {
+                window.location.href = data.redirect;
+              } else {
+                window.location.href = '<%= new_user_session_path %>';
+              }
+              return null;
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data && data.success) {
+            this.classList.toggle('liked');
+            this.setAttribute('data-liked', !isLiked);
+            if (likeCountEl) {
+              likeCountEl.textContent = data.like_count;
+            }
+          } else if (data && data.message) {
+            if (data.redirect) {
+              window.location.href = data.redirect;
+            } else {
+              alert(data.message || 'An error occurred');
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred. Please try again.');
+        });
+      });
+    });
+
+    // Share button functionality
+    document.querySelectorAll('.btn-share-card').forEach(function(shareBtn) {
+      shareBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const url = this.getAttribute('data-url');
+        const title = this.getAttribute('data-title');
+        const description = this.getAttribute('data-description') || '';
+        const image = this.getAttribute('data-image') || '';
+        const sport = this.getAttribute('data-sport') || '';
+        const date = this.getAttribute('data-date') || '';
+        const venue = this.getAttribute('data-venue') || '';
+        const entryFee = this.getAttribute('data-entry-fee') || 'Free';
+        const tournamentId = this.getAttribute('data-tournament-id');
+        
+        // Create rich share text with all tournament details
+        let shareText = `🏆 ${title}\n\n`;
+        if (description) {
+          shareText += `${description}\n\n`;
+        }
+        shareText += `⚽ Sport: ${sport}\n`;
+        shareText += `📅 Date: ${date}\n`;
+        shareText += `📍 Venue: ${venue}\n`;
+        shareText += `💰 Entry Fee: ${entryFee}\n\n`;
+        shareText += `🔗 View details: ${url}`;
+        
+        if (navigator.share) {
+          const shareData = {
+            title: title,
+            text: shareText,
+            url: url
+          };
+          
+          // Add image if available (some platforms support it)
+          if (image) {
+            try {
+              shareData.files = [new File([], image, { type: 'image/png' })];
+            } catch(e) {
+              // Image sharing not supported, continue without it
+            }
+          }
+          
+          navigator.share(shareData).catch(err => {
+            console.log('Error sharing', err);
+            // Fallback to share options
+            showShareOptions(url, title, shareText, shareBtn, image);
+          });
+        } else {
+          // Show share options
+          showShareOptions(url, title, shareText, shareBtn, image);
+        }
+      });
+    });
+
+    function showShareOptions(url, title, text, button, image) {
+      // Create a simple share modal
+      const shareModal = document.createElement('div');
+      shareModal.className = 'share-modal';
+      shareModal.innerHTML = `
+        <div class="share-modal-content">
+          <h3>Share Tournament</h3>
+          <div class="share-options">
+            <button class="share-option-btn" data-action="copy">
+              <span>📋</span> Copy Link
+            </button>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" 
+               target="_blank" class="share-option-btn" data-action="facebook">
+              <span>📘</span> Facebook
+            </a>
+            <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}" 
+               target="_blank" class="share-option-btn" data-action="twitter">
+              <span>🐦</span> Twitter
+            </a>
+            <a href="https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}" 
+               target="_blank" class="share-option-btn" data-action="whatsapp">
+              <span>💬</span> WhatsApp
+            </a>
+          </div>
+          <button class="share-close-btn" onclick="this.closest('.share-modal').remove()">Close</button>
+        </div>
+      `;
+      document.body.appendChild(shareModal);
+      
+      // Handle copy button
+      shareModal.querySelector('[data-action="copy"]').addEventListener('click', function() {
+        copyToClipboard(url, button);
+        shareModal.remove();
+      });
+    }
+
+    function copyToClipboard(text, button) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          const originalText = button.innerHTML;
+          button.innerHTML = '<span class="share-icon-card">✓</span>';
+          button.style.background = '#28a745';
+          button.style.borderColor = '#28a745';
+          button.style.color = 'white';
+          setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.background = '';
+            button.style.borderColor = '';
+            button.style.color = '';
+          }, 2000);
+        }).catch(err => {
+          prompt('Copy this link:', text);
+        });
+      } else {
+        prompt('Copy this link:', text);
+      }
+    }
   });
 </script>

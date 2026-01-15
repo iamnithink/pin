@@ -1,16 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>" data-theme="light">
   <head>
-    <title>PIN - PlayInNear</title>
+    <title><%= t('app.name') %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    <style>
+      .language-switcher {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: var(--bg-card, #ffffff);
+        border-radius: 8px;
+        box-shadow: 0 2px 10px var(--shadow, rgba(15, 23, 42, 0.12));
+        padding: 10px;
+      }
+      .language-switcher select {
+        padding: 8px 12px;
+        border: 2px solid var(--accent, #3b82f6);
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        background: var(--bg-card, #ffffff);
+        color: var(--text-primary, #1e293b);
+      }
+      .language-switcher select:focus {
+        outline: none;
+        border-color: var(--accent-hover, #2563eb);
+      }
+      @media (max-width: 768px) {
+        .language-switcher {
+          top: 10px;
+          right: 10px;
+          padding: 8px;
+        }
+        .language-switcher select {
+          font-size: 0.85rem;
+          padding: 6px 10px;
+        }
+      }
+    </style>
   </head>
 
   <body>
+    <div class="language-switcher">
+      <select id="language-select" onchange="changeLanguage(this.value)">
+        <option value="en" <%= 'selected' if I18n.locale == :en %>><%= t('language.english') %></option>
+        <option value="hi" <%= 'selected' if I18n.locale == :hi %>><%= t('language.hindi') %></option>
+        <option value="kn" <%= 'selected' if I18n.locale == :kn %>><%= t('language.kannada') %></option>
+        <option value="ml" <%= 'selected' if I18n.locale == :ml %>><%= t('language.malayalam') %></option>
+      </select>
+    </div>
+    <div class="theme-toggle">
+      <button id="theme-toggle-btn" class="theme-toggle-button" title="Toggle Dark/Light Mode">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </div>
     <%= yield %>
+    <%= render 'shared/footer' %>
+    <script>
+      function changeLanguage(locale) {
+        const currentUrl = window.location.pathname;
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Remove existing locale from path if present
+        let pathWithoutLocale = currentUrl.replace(/^\/(en|hi|kn|ml)(\/|$)/, '/');
+        
+        // Handle root path
+        if (pathWithoutLocale === '/') {
+          pathWithoutLocale = '';
+        }
+        
+        // Ensure path starts with / if it's not empty and doesn't already start with /
+        if (pathWithoutLocale && !pathWithoutLocale.startsWith('/')) {
+          pathWithoutLocale = '/' + pathWithoutLocale;
+        }
+        
+        // Build new URL with locale
+        // For English (default), don't include locale prefix
+        // For other languages, include locale prefix
+        const newPath = locale === 'en' 
+          ? (pathWithoutLocale || '/') 
+          : '/' + locale + (pathWithoutLocale || '');
+        
+        const newUrl = newPath + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        
+        window.location.href = newUrl;
+      }
+
+      // Theme Toggle Functionality
+      (function() {
+        const themeToggle = document.getElementById('theme-toggle-btn');
+        const html = document.documentElement;
+        
+        // Load saved theme or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        
+        if (themeToggle) {
+          themeToggle.addEventListener('click', function() {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+          });
+        }
+        
+        function updateThemeIcon(theme) {
+          if (themeToggle) {
+            const icon = themeToggle.querySelector('.theme-icon');
+            if (icon) {
+              icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+          }
+        }
+      })();
+    </script>
+    <style>
+      .theme-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+      }
+
+      .theme-toggle-button {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid var(--border-color, #e0e0e0);
+        background: var(--bg-color, white);
+        color: var(--text-color, #333);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .theme-toggle-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      @media (max-width: 768px) {
+        .theme-toggle {
+          bottom: 15px;
+          right: 15px;
+        }
+        .theme-toggle-button {
+          width: 45px;
+          height: 45px;
+          font-size: 1.3rem;
+        }
+      }
+    </style>
   </body>
 </html>
 

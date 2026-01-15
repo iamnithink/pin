@@ -13,11 +13,24 @@ class User < ApplicationRecord
   has_many :team_members, dependent: :destroy
   has_many :teams, through: :team_members
   has_many :created_venues, class_name: 'Venue', foreign_key: 'created_by_id', dependent: :nullify
+  has_many :tournament_likes, dependent: :destroy
+  has_many :liked_tournaments, through: :tournament_likes, source: :tournament
+
+  # Roles
+  enum role: {
+    user: 'user',
+    admin: 'admin',
+    super_admin: 'super_admin'
+  }
+
+  # Callbacks
+  before_validation :set_default_role, on: :create
 
   # Validations
   validates :phone, presence: true, uniqueness: true, format: { with: /\A\d{10}\z/ }
   validates :name, presence: true, length: { minimum: 2, maximum: 100 }
   validates :pincode, format: { with: /\A\d{6}\z/ }, allow_blank: true
+  validates :role, presence: true, inclusion: { in: roles.keys }
 
   # Geocoding
   geocoded_by :address, latitude: :latitude, longitude: :longitude
@@ -26,6 +39,9 @@ class User < ApplicationRecord
   # Scopes
   scope :verified, -> { where(phone_verified: true) }
   scope :by_pincode, ->(pincode) { where(pincode: pincode) }
+  scope :super_admins, -> { where(role: 'super_admin') }
+  scope :admins, -> { where(role: 'admin') }
+  scope :users, -> { where(role: 'user') }
   scope :nearby, ->(lat, lng, radius = 10) {
     # Using Haversine formula for distance calculation (in km)
     # Approximate: 1 degree latitude ≈ 111 km
@@ -71,6 +87,25 @@ class User < ApplicationRecord
     name.presence || email.split('@').first
   end
 
+  # Role helper methods
+  def super_admin?
+    role == 'super_admin'
+  end
+
+  def admin?
+    role == 'admin' || super_admin?
+  end
+
+  def regular_user?
+    role == 'user'
+  end
+
+  private
+
+  def set_default_role
+    self.role ||= 'user'
+  end
+
   # Ransack (used by ActiveAdmin) requires an explicit whitelist of searchable attributes.
   # This avoids accidentally exposing sensitive columns (passwords, tokens, etc.).
   def self.ransackable_attributes(auth_object = nil)
@@ -83,6 +118,7 @@ class User < ApplicationRecord
       pincode
       provider
       uid
+      role
       created_at
       updated_at
     ]
