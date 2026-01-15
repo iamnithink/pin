@@ -17,6 +17,8 @@ class User < ApplicationRecord
   has_many :liked_tournaments, through: :tournament_likes, source: :tournament
 
   # Roles
+  # Explicitly declare the attribute type for Rails 7.2+ enum support
+  attribute :role, :string, default: 'user'
   enum role: {
     user: 'user',
     admin: 'admin',
