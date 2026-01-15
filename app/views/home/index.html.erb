@@ -220,7 +220,7 @@
                   <%# Likes disabled in public view; ActiveAdmin users can manage likes in admin %>
                   <div class="like-disabled" title="Likes available for signed-in admins only" style="display: inline-flex; align-items: center; gap: 6px;">
                     <span class="like-icon-card">❤️</span>
-                    <span class="like-count-card"><%= tournament.likes_count || 0 %></span>
+                    <span class="like-count-card"><%= tournament.respond_to?(:likes_count) ? (tournament.likes_count || 0) : tournament.tournament_likes.count %></span>
                   </div>
                   
                   <% share_url = url_for(controller: 'tournaments', action: 'show', slug: tournament.slug, locale: I18n.locale, only_path: false) %>
