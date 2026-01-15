@@ -44,6 +44,13 @@ deploy.sh
 ROLE_BASED_ACCESS.md
 CLOUDINARY_SETUP.md
 PERFORMANCE_OPTIMIZATIONS.md
+DEPLOY_CHECKLIST.md
+DEPLOYMENT_COMPLETE.md
+DEPLOYMENT_STATUS.md
+export_env_for_railway.sh
+RAILWAY_DEPLOY_NOW.md
+verify_deployment.sh
+BUILD_FIX.md
 
 # Ignore node_modules
 /node_modules
