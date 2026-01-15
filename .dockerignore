@@ -4,50 +4,73 @@
 .gitattributes
 
 # Documentation
+README.md
 *.md
-!README.md
+!DEPLOYMENT_SECRETS.txt
 
-# Docker
-Dockerfile.dev
-docker-compose.yml
-docker-compose.prod.yml
-.dockerignore
-
-# Railway
-railway.json
-Procfile
+# Environment files
+.env
+.env.*
+*.local
 
 # Development files
-.env
-.env.local
-.env.*.local
+docker-compose.yml
+docker-compose.prod.yml
+Dockerfile.dev
+docker-entrypoint.sh
 
 # Logs
+*.log
 log/*
 tmp/*
-*.log
 
-# Node
-node_modules
-npm-debug.log
-yarn-error.log
+# Test files
+spec/*
+test/*
+coverage/*
 
-# IDE
+# IDE files
 .vscode
 .idea
 *.swp
 *.swo
 *~
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Test
-coverage/
-spec/
+# Node modules (if any)
+node_modules
+yarn-error.log
 
-# Build artifacts
-/public/assets
-/public/packs
-/public/packs-test
+# Precompiled assets (will be rebuilt in Docker)
+public/assets
+public/packs
+public/packs-test
+
+# Storage (will be handled by Cloudinary in production)
+storage/*
+tmp/storage/*
+
+# Database
+*.sql
+*.dump
+db/*.sqlite3
+
+# Railway specific
+railway.json
+railway.toml
+
+# Deployment docs (keep secrets file)
+DEPLOY*.md
+CLI_DEPLOYMENT.md
+QUICK_DEPLOY.md
+RAILWAY_DEPLOYMENT.md
+ROLE_BASED_ACCESS.md
+CLOUDINARY_SETUP.md
+PERFORMANCE_OPTIMIZATIONS.md
+deploy.sh
+DEPLOY_COMMANDS.txt
+DEPLOY_INSTRUCTIONS.md
+DEPLOY_NOW.sh
