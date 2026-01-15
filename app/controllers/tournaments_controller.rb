@@ -6,7 +6,18 @@ class TournamentsController < ApplicationController
     authorize! :read, @tournament
     @tournament.increment_view_count unless @tournament.view_count_changed?
     @is_liked = user_signed_in? && @tournament.tournament_likes.exists?(user_id: current_user.id)
-    @like_count = @tournament.likes_count || 0
+    # Safely get likes count - handle case where counter cache column doesn't exist
+    @like_count = begin
+      if @tournament.respond_to?(:likes_count) && @tournament.attributes.key?('likes_count')
+        @tournament.likes_count || 0
+      elsif @tournament.respond_to?(:tournament_likes)
+        @tournament.tournament_likes.count
+      else
+        0
+      end
+    rescue => e
+      0
+    end
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path, alert: 'Tournament not found'
   end
@@ -24,7 +35,18 @@ class TournamentsController < ApplicationController
     else
       @tournament.tournament_likes.create(user: current_user)
       @tournament.reload
-      render json: { success: true, like_count: @tournament.likes_count || 0 }
+      like_count = begin
+        if @tournament.respond_to?(:likes_count) && @tournament.attributes.key?('likes_count')
+          @tournament.likes_count || 0
+        elsif @tournament.respond_to?(:tournament_likes)
+          @tournament.tournament_likes.count
+        else
+          0
+        end
+      rescue => e
+        0
+      end
+      render json: { success: true, like_count: like_count }
     end
   end
 
@@ -40,7 +62,18 @@ class TournamentsController < ApplicationController
     if like
       like.destroy
       @tournament.reload
-      render json: { success: true, like_count: @tournament.likes_count || 0 }
+      like_count = begin
+        if @tournament.respond_to?(:likes_count) && @tournament.attributes.key?('likes_count')
+          @tournament.likes_count || 0
+        elsif @tournament.respond_to?(:tournament_likes)
+          @tournament.tournament_likes.count
+        else
+          0
+        end
+      rescue => e
+        0
+      end
+      render json: { success: true, like_count: like_count }
     else
       render json: { success: false, message: 'Not liked' }, status: :unprocessable_entity
     end
