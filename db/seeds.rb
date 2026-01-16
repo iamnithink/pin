@@ -12,50 +12,95 @@ puts "=" * 60
 puts "\n[1/8] Creating users with roles..."
 
 # Super Admin
-super_admin = User.find_or_create_by!(email: 'superadmin@playinnear.com') do |u|
-  u.name = 'Super Administrator'
-  u.phone = '9000000000'
-  u.password = 'admin123456'
-  u.password_confirmation = 'admin123456'
-  u.pincode = '560001'
-  u.address = 'Bangalore, Karnataka, India'
-  u.phone_verified = true
-  u.role = 'super_admin'
+super_admin = User.find_by(email: 'superadmin@playinnear.com') || User.find_by(phone: '9000000000')
+if super_admin.nil?
+  super_admin = User.create!(
+    email: 'superadmin@playinnear.com',
+    name: 'Super Administrator',
+    phone: '9000000000',
+    password: 'admin123456',
+    password_confirmation: 'admin123456',
+    pincode: '560001',
+    address: 'Bangalore, Karnataka, India',
+    phone_verified: true,
+    role: 'super_admin',
+    latitude: 12.9716,
+    longitude: 77.5946
+  )
+else
+  # Update email if it's different (using update_columns to skip validations)
+  super_admin.update_columns(email: 'superadmin@playinnear.com') if super_admin.email != 'superadmin@playinnear.com'
+  # Update coordinates if missing (using update_columns to skip validations)
+  super_admin.update_columns(latitude: 12.9716, longitude: 77.5946) if super_admin.latitude.blank?
+  # Update role if needed (using update_columns to skip validations)
+  super_admin.update_columns(role: 'super_admin') unless super_admin.super_admin?
 end
-super_admin.update!(role: 'super_admin') unless super_admin.super_admin?
 puts "  ✓ Super Admin: #{super_admin.email} (password: admin123456)"
 
 # Admin
-admin = User.find_or_create_by!(email: 'admin@playinnear.com') do |u|
-  u.name = 'Administrator'
-  u.phone = '9000000001'
-  u.password = 'admin123456'
-  u.password_confirmation = 'admin123456'
-  u.pincode = '560001'
-  u.address = 'Bangalore, Karnataka, India'
-  u.phone_verified = true
-  u.role = 'admin'
+admin = User.find_by(email: 'admin@playinnear.com') || User.find_by(phone: '9000000001')
+if admin.nil?
+  admin = User.create!(
+    email: 'admin@playinnear.com',
+    name: 'Administrator',
+    phone: '9000000001',
+    password: 'admin123456',
+    password_confirmation: 'admin123456',
+    pincode: '560001',
+    address: 'Bangalore, Karnataka, India',
+    phone_verified: true,
+    role: 'admin',
+    latitude: 12.9716,
+    longitude: 77.5946
+  )
+else
+  # Update email if it's different (using update_columns to skip validations)
+  admin.update_columns(email: 'admin@playinnear.com') if admin.email != 'admin@playinnear.com'
+  # Update coordinates if missing (using update_columns to skip validations)
+  admin.update_columns(latitude: 12.9716, longitude: 77.5946) if admin.latitude.blank?
+  # Update role if needed (using update_columns to skip validations)
+  admin.update_columns(role: 'admin') unless admin.admin?
 end
-admin.update!(role: 'admin') unless admin.admin?
 puts "  ✓ Admin: #{admin.email} (password: admin123456)"
 
 # Regular Users (15 users)
 users = []
 15.times do |i|
-  user = User.find_or_create_by!(email: "user#{i + 1}@example.com") do |u|
-    u.name = Faker::Name.name
-    u.phone = "90000#{format('%05d', i + 2)}"[0, 10]
-    u.password = 'password123'
-    u.password_confirmation = 'password123'
-    u.pincode = format("5600%02d", rand(0..99))
-    u.address = Faker::Address.full_address
-    u.phone_verified = [true, false].sample
-    u.role = 'user'
+  email = "user#{i + 1}@example.com"
+  phone = "90000#{format('%05d', i + 2)}"[0, 10]
+  user = User.find_by(email: email) || User.find_by(phone: phone)
+  
+  if user.nil?
+    user = User.create!(
+      email: email,
+      name: Faker::Name.name,
+      phone: phone,
+      password: 'password123',
+      password_confirmation: 'password123',
+      pincode: format("5600%02d", rand(0..99)),
+      address: Faker::Address.full_address,
+      phone_verified: [true, false].sample,
+      role: 'user',
+      latitude: 12.9716 + (rand - 0.5) * 0.1,
+      longitude: 77.5946 + (rand - 0.5) * 0.1
+    )
+  else
+    # Update email if different (using update_columns to skip validations)
+    user.update_columns(email: email) if user.email != email
+    # Don't update phone if user already exists - phone numbers are unique
+    # Update coordinates if missing
+    if user.latitude.blank?
+      user.update_columns(
+        latitude: 12.9716 + (rand - 0.5) * 0.1,
+        longitude: 77.5946 + (rand - 0.5) * 0.1
+      )
+    end
+    # Update role if needed
+    user.update_columns(role: 'user') unless user.regular_user?
   end
-  user.update!(role: 'user') unless user.regular_user?
   users << user
 end
-puts "  ✓ Created #{users.count} regular users"
+puts "  ✓ Created/Updated #{users.count} regular users"
 
 all_users = [super_admin, admin] + users
 puts "  Total users: #{all_users.count} (1 super_admin, 1 admin, #{users.count} users)"
