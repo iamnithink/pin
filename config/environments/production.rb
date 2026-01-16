@@ -46,9 +46,20 @@ Rails.application.configure do
 
   # Do not fall back to assets pipeline if a precompiled asset is missed.
   config.assets.compile = false
+  
+  # Enable gzip compression for responses
+  config.middleware.use Rack::Deflater
+  
+  # Enable brotli compression if available (requires brotli gem)
+  # Add to Gemfile: gem 'brotli'
+  # config.middleware.use Rack::Brotli if defined?(Rack::Brotli)
 
-  # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
+  # Enable serving of images, stylesheets, and JavaScripts from an asset server (CDN).
+  # Set ASSET_CDN_URL environment variable to enable CDN (e.g., https://cdn.example.com)
+  if ENV['ASSET_CDN_URL'].present?
+    config.asset_host = ENV['ASSET_CDN_URL']
+    config.action_controller.asset_host = ENV['ASSET_CDN_URL']
+  end
 
   # Specifies the header that your server uses for sending files.
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache

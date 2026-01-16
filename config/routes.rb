@@ -61,6 +61,9 @@ Rails.application.routes.draw do
     get 'about', to: 'static#about'
     get 'contact', to: 'static#contact'
 
+    # Infinite scroll endpoint
+    get 'tournaments/load_more', to: 'home#load_more', as: 'load_more_tournaments'
+
     root 'home#index'
   end
 end

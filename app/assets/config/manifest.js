@@ -3,5 +3,6 @@
 //= link active_admin.css
 //= link active_admin.js
 //= link application.js
+//= link home.js
 //= link controllers/index.js
 

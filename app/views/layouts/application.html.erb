@@ -6,7 +6,22 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= yield :head if content_for?(:head) %>
     <%= javascript_importmap_tags %>
+    <script>
+      // Register Service Worker for offline caching and faster loads
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then((registration) => {
+              console.log('Service Worker registered:', registration.scope);
+            })
+            .catch((error) => {
+              console.log('Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
     <style>
       .language-switcher {
         position: fixed;

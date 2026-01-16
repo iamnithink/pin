@@ -1,0 +1,175 @@
+<% cache [tournament, tournament.updated_at, tournament.image.attached?, tournament.tournament_theme&.updated_at, params[:latitude], params[:longitude]] do %>
+  <div class="tournament-card" data-tournament-id="<%= tournament.id %>">
+    <!-- Tournament Image or Limited Theme Preview -->
+    <div class="tournament-image">
+      <% if tournament.image.attached? %>
+        <%# Preload first 3 images for faster initial render %>
+        <% is_above_fold = local_assigns[:index] && local_assigns[:index] < 3 %>
+        <%= optimized_image_tag tournament.image, 
+            alt: tournament.title, 
+            class: "card-image",
+            width: 400,
+            quality: 'auto:good',
+            format: 'auto',
+            loading: is_above_fold ? 'eager' : 'lazy',
+            decoding: 'async',
+            fetchpriority: is_above_fold ? 'high' : 'auto' %>
+      <% elsif tournament.tournament_theme.present? && tournament.tournament_theme.preview_image_url.present? %>
+        <% is_above_fold = local_assigns[:index] && local_assigns[:index] < 3 %>
+        <%= image_tag tournament.tournament_theme.preview_image_url, 
+            alt: tournament.title, 
+            class: "card-image",
+            loading: is_above_fold ? 'eager' : 'lazy',
+            decoding: 'async',
+            fetchpriority: is_above_fold ? 'high' : 'auto' %>
+      <% elsif tournament.tournament_theme.present? %>
+        <!-- Limited theme preview - just show theme name and key info -->
+        <div class="card-theme-preview">
+          <div class="theme-preview-header">
+            <h3 class="theme-preview-title"><%= tournament.title %></h3>
+            <div class="theme-preview-badge"><%= tournament.tournament_theme.name %></div>
+          </div>
+          <div class="theme-preview-info">
+            <div class="preview-info-item">
+              <span>📅</span>
+              <span><%= tournament.start_time.strftime("%b %d, %Y") %></span>
+            </div>
+            <div class="preview-info-item">
+              <span>📍</span>
+              <span>
+                <% if tournament.venue_address.present? %>
+                  <%= tournament.venue_address.split(',').first %>
+                <% elsif tournament.venue.present? %>
+                  <%= tournament.venue.name %>
+                <% else %>
+                  <%= t('home.tournaments.location_tbd') %>
+                <% end %>
+              </span>
+            </div>
+            <% if tournament.entry_fee.present? %>
+              <div class="preview-info-item">
+                <span>💰</span>
+                <span>₹<%= tournament.entry_fee.to_i %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div class="card-image-placeholder">
+          <%= tournament.sport.icon %> <%= tournament.sport.name %>
+        </div>
+      <% end %>
+      <div class="tournament-badge">
+        <%= tournament.sport.icon %> <%= tournament.sport.name %>
+      </div>
+    </div>
+
+    <!-- Tournament Content - Always shown for consistency -->
+    <div class="tournament-content">
+      <h3 class="tournament-title">
+        <%= link_to tournament.title, tournament_path(tournament.slug), class: "tournament-link" %>
+      </h3>
+      
+      <div class="tournament-meta">
+        <div class="meta-item">
+          <span class="meta-icon">📅</span>
+          <span class="meta-text">
+            <%= tournament.start_time.strftime("%b %d, %Y") %>
+            <small><%= tournament.start_time.strftime("%I:%M %p") %></small>
+          </span>
+        </div>
+        
+        <div class="meta-item">
+          <span class="meta-icon">📍</span>
+          <span class="meta-text">
+            <% if tournament.venue_address.present? %>
+              <%= tournament.venue_address.split(',').first %>
+            <% elsif tournament.venue.present? %>
+              <%= tournament.venue.name %>
+            <% else %>
+              <%= t('home.tournaments.location_tbd') %>
+            <% end %>
+          </span>
+        </div>
+        
+        <% if tournament.entry_fee.present? %>
+          <div class="meta-item">
+            <span class="meta-icon">💰</span>
+            <span class="meta-text">₹<%= tournament.entry_fee.to_i %></span>
+          </div>
+        <% end %>
+      </div>
+
+      <% if tournament.description.present? %>
+        <p class="tournament-description">
+          <%= truncate(tournament.description, length: 120) %>
+        </p>
+      <% end %>
+
+      <!-- Prize Info -->
+      <% if tournament.first_prize.present? || tournament.prizes_json.present? %>
+        <div class="tournament-prizes">
+          <span class="prize-label"><%= t('home.tournaments.prize_pool') %></span>
+          <span class="prize-amount">
+            <% if tournament.first_prize.present? %>
+              ₹<%= tournament.first_prize.to_i.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse %>
+            <% else %>
+              <%= t('home.tournaments.see_details') %>
+            <% end %>
+          </span>
+        </div>
+      <% end %>
+
+      <!-- Distance (if location is available) -->
+      <% if params[:latitude].present? && params[:longitude].present? %>
+        <%# Use distance from database if available (from SELECT query) %>
+        <% distance = tournament.respond_to?(:distance) ? tournament.distance : tournament.distance_from(params[:latitude].to_f, params[:longitude].to_f) %>
+        <% if distance.present? %>
+          <div class="tournament-distance">
+            <span class="distance-icon">📏</span>
+            <span class="distance-text"><%= t('home.tournaments.km_away', distance: distance.round(1)) %></span>
+          </div>
+        <% end %>
+      <% end %>
+
+      <!-- Like and Share Buttons -->
+      <div class="tournament-social-actions">
+        <%# Likes disabled in public view; ActiveAdmin users can manage likes in admin %>
+        <% 
+          likes_count = tournament.likes_count || 0
+        %>
+        <div class="like-disabled" title="Likes available for signed-in admins only">
+          <span class="like-icon-card">❤️</span>
+          <span class="like-count-card"><%= likes_count %></span>
+        </div>
+        
+        <% share_url = url_for(controller: 'tournaments', action: 'show', slug: tournament.slug, locale: I18n.locale, only_path: false) %>
+        <% share_image = tournament.image.attached? ? optimized_image_url(tournament.image, width: 1200, quality: 'auto:good') : (tournament.tournament_theme&.preview_image_url || '') %>
+        <button class="btn-share-card" 
+                data-url="<%= share_url %>"
+                data-title="<%= tournament.title %>"
+                data-description="<%= truncate(tournament.description || '', length: 150) %>"
+                data-image="<%= share_image %>"
+                data-sport="<%= tournament.sport.name %>"
+                data-date="<%= tournament.start_time.strftime('%B %d, %Y at %I:%M %p') %>"
+                data-venue="<%= tournament.venue_address.presence&.split(',')&.first || tournament.venue&.name || 'TBD' %>"
+                data-entry-fee="<%= tournament.entry_fee.present? ? "₹#{tournament.entry_fee}" : 'Free' %>"
+                data-tournament-id="<%= tournament.id %>">
+          <span class="share-icon-card">🔗</span>
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="tournament-actions">
+        <a href="<%= tournament_path(tournament.slug) %>" class="btn-view-details"><%= t('home.tournaments.view_details') %></a>
+        <% gmap_link = tournament.venue_google_maps_link.presence %>
+        <% if gmap_link.blank? && tournament.venue_id.present? %>
+          <% gmap_link = tournament.venue&.google_maps_link %>
+        <% end %>
+        <% if gmap_link.present? %>
+          <a href="<%= gmap_link %>" target="_blank" class="btn-map-link"><%= t('home.tournaments.map') %></a>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
