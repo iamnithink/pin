@@ -26,6 +26,8 @@ RUN bundle install --without development test
 COPY . .
 
 # Precompile assets for production
+# Fix arctic_admin glob imports for SassC compatibility before precompiling
+RUN bundle exec rake assets:fix_arctic_admin_imports || true
 RUN RAILS_ENV=production SECRET_KEY_BASE=dummy bundle exec rails assets:precompile
 
 # Expose port (Railway sets PORT env var)
