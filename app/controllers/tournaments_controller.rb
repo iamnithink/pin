@@ -95,15 +95,16 @@ class TournamentsController < ApplicationController
   def set_tournament
     # Eager load all associations used in the show view to avoid N+1 queries
     # Note: tournament_likes uses counter_cache (likes_count), so no need to eager load
-    # venue is NOT eager loaded - view uses venue_name column first, only falls back to venue&.name
-    # when venue_name is blank (rare case), so lazy loading is acceptable
+    # venue is NOT eager loaded - view uses venue_address field first, only falls back to venue&.full_address
+    # when venue_address is blank (rare case), so lazy loading is acceptable
     # created_by is not used in the view, so don't eager load it
     # image_attachment is preloaded to avoid N+1 when checking image.attached?
     # blob is NOT preloaded - ActiveStorage handles url_for() efficiently without eager loading blob
     @tournament = Tournament.includes(
       :sport, 
       :tournament_theme, 
-      :cricket_match_type
+      :cricket_match_type,
+      top_level_comments: { user: {}, replies: :user }
     )
     .preload(:image_attachment)
     .friendly.find(params[:slug])

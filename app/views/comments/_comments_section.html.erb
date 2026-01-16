@@ -1,0 +1,121 @@
+<div class="comments-section" id="comments-section">
+  <div class="comments-header" id="comments-header">
+    <h2>
+      Comments
+      <% if tournament.comments_count > 0 %>
+        <span class="comments-count">(<%= tournament.comments_count %>)</span>
+      <% end %>
+    </h2>
+  </div>
+  
+  <% if user_signed_in? %>
+    <div class="new-comment-section">
+      <div id="comment-form">
+        <%= render 'comments/form', tournament: tournament, comment: Comment.new %>
+      </div>
+    </div>
+  <% end %>
+  
+  <div class="comments-list" id="comments-list">
+    <% 
+      # Ensure eager loading to avoid N+1 queries
+      top_level_comments = if tournament.top_level_comments.loaded?
+        tournament.top_level_comments
+      else
+        tournament.top_level_comments.includes(:user, replies: :user)
+      end
+    %>
+    <% if top_level_comments.any? %>
+      <% top_level_comments.each do |comment| %>
+        <%= render 'comments/comment', comment: comment, tournament: tournament %>
+      <% end %>
+    <% else %>
+      <div class="no-comments">
+        <p>No comments yet. Be the first to comment!</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  // Use event delegation to handle dynamically added elements
+  document.addEventListener('click', function(e) {
+    // Reply button functionality
+    if (e.target.closest('.btn-reply')) {
+      const btn = e.target.closest('.btn-reply');
+      const commentId = btn.getAttribute('data-comment-id');
+      const replyForm = document.getElementById('reply-form-' + commentId);
+      
+      if (replyForm) {
+        replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+        if (replyForm.style.display === 'block') {
+          const textarea = replyForm.querySelector('.comment-textarea');
+          if (textarea) {
+            textarea.focus();
+          }
+        }
+      }
+    }
+    
+    // Edit button functionality
+    if (e.target.closest('.btn-edit-comment')) {
+      const btn = e.target.closest('.btn-edit-comment');
+      const commentId = btn.getAttribute('data-comment-id');
+      const commentContent = document.getElementById('comment-content-' + commentId);
+      const editForm = document.getElementById('comment-edit-form-' + commentId);
+      
+      if (commentContent && editForm) {
+        commentContent.style.display = commentContent.style.display === 'none' ? 'block' : 'none';
+        editForm.style.display = editForm.style.display === 'none' ? 'block' : 'none';
+        
+        if (editForm.style.display === 'block') {
+          const textarea = editForm.querySelector('.comment-textarea');
+          if (textarea) {
+            textarea.focus();
+          }
+        }
+      }
+    }
+
+    // Cancel edit button functionality
+    if (e.target.closest('.btn-cancel-edit')) {
+      const btn = e.target.closest('.btn-cancel-edit');
+      const commentId = btn.getAttribute('data-comment-id');
+      const commentContent = document.getElementById('comment-content-' + commentId);
+      const editForm = document.getElementById('comment-edit-form-' + commentId);
+      
+      if (commentContent && editForm) {
+        commentContent.style.display = 'block';
+        editForm.style.display = 'none';
+      }
+    }
+  });
+
+  // Handle Turbo Stream events to reinitialize character counters and event handlers
+  document.addEventListener('turbo:frame-load', function() {
+    initializeCharacterCounters();
+  });
+
+  document.addEventListener('turbo:before-stream-render', function() {
+    // Reinitialize after Turbo Stream updates
+    setTimeout(initializeCharacterCounters, 100);
+  });
+
+  function initializeCharacterCounters() {
+    document.querySelectorAll('.comment-textarea').forEach(function(textarea) {
+      const formContainer = textarea.closest('.comment-form-container');
+      const charCount = formContainer ? formContainer.querySelector('.char-count .current-count') : null;
+      
+      if (charCount && !textarea.hasAttribute('data-char-count-initialized')) {
+        textarea.setAttribute('data-char-count-initialized', 'true');
+        textarea.addEventListener('input', function() {
+          charCount.textContent = this.value.length;
+        });
+        charCount.textContent = textarea.value.length;
+      }
+    });
+  }
+
+  // Initialize on page load
+  initializeCharacterCounters();
+</script>

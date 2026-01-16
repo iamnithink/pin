@@ -52,6 +52,7 @@ Rails.application.routes.draw do
         post :like
         delete :unlike
       end
+      resources :comments, only: [:create, :update, :destroy]
     end
 
     # Static pages

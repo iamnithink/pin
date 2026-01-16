@@ -1,0 +1,83 @@
+<%= turbo_frame_tag "comment-#{comment.id}" do %>
+<div class="comment-item" id="comment-<%= comment.id %>" data-comment-id="<%= comment.id %>">
+  <div class="comment-header">
+    <div class="comment-author">
+      <div class="author-avatar">
+        <%= comment.user&.name&.first&.upcase || 'U' %>
+      </div>
+      <div class="author-info">
+        <span class="author-name"><%= comment.user&.name || 'Unknown User' %></span>
+        <span class="comment-time"><%= time_ago_in_words(comment.created_at) %> ago</span>
+      </div>
+    </div>
+    
+    <% if user_signed_in? && (comment.can_be_edited_by?(current_user) || comment.can_be_deleted_by?(current_user)) %>
+      <div class="comment-actions">
+        <% if comment.can_be_edited_by?(current_user) %>
+          <button class="btn-edit-comment" data-comment-id="<%= comment.id %>" title="Edit">✏️</button>
+        <% end %>
+        <% if comment.can_be_deleted_by?(current_user) %>
+          <%= button_to tournament_comment_path(tournament, comment),
+              method: :delete,
+              form: { 
+                data: { 
+                  turbo_confirm: "Are you sure you want to delete this comment?"
+                },
+                class: "delete-comment-form"
+              },
+              class: "btn-delete-comment",
+              title: "Delete" do %>
+            🗑️
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  
+  <div class="comment-body">
+    <div class="comment-content" id="comment-content-<%= comment.id %>">
+      <%= simple_format(comment.body) %>
+    </div>
+    
+    <div class="comment-edit-form" id="comment-edit-form-<%= comment.id %>" style="display: none;">
+      <%= render 'comments/form', tournament: tournament, comment: comment %>
+    </div>
+  </div>
+  
+  <div class="comment-footer">
+    <% if user_signed_in? && !comment.is_reply? %>
+      <button class="btn-reply" data-comment-id="<%= comment.id %>" data-parent-id="<%= comment.id %>">
+        Reply
+      </button>
+    <% end %>
+  </div>
+  
+  <% 
+    # Check if replies are loaded to avoid N+1 queries
+    has_replies = if comment.replies.loaded?
+      comment.replies.any?
+    else
+      # If not loaded, check if eager loading is available, otherwise use exists?
+      comment.association(:replies).loaded? ? comment.replies.any? : comment.replies.exists?
+    end
+    
+    if has_replies
+      # Use loaded replies if available, otherwise fetch with order
+      replies = if comment.replies.loaded?
+        comment.replies.sort_by(&:created_at)
+      else
+        comment.replies.includes(:user).order(created_at: :asc)
+      end
+  %>
+    <div class="replies-container" id="replies-<%= comment.id %>">
+      <% replies.each do |reply| %>
+        <%= render 'comments/comment', comment: reply, tournament: tournament %>
+      <% end %>
+    </div>
+  <% end %>
+  
+  <div class="reply-form-container" id="reply-form-<%= comment.id %>" style="display: none;">
+    <%= render 'comments/form', tournament: tournament, comment: Comment.new(parent_id: comment.id) %>
+  </div>
+</div>
+<% end %>

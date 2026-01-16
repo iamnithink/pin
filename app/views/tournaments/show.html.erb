@@ -103,9 +103,15 @@
                 <div class="info-item">
                   <span class="info-label"><%= t('tournament.venue') %></span>
                   <span class="info-value">
-                    <%= @tournament.venue_name.presence || @tournament.venue&.name || t('home.tournaments.location_tbd') %>
                     <% if @tournament.venue_address.present? %>
-                      <br><small><%= @tournament.venue_address %></small>
+                      <%= @tournament.venue_address %>
+                    <% elsif @tournament.venue.present? %>
+                      <%= @tournament.venue.name %>
+                      <% if @tournament.venue.full_address.present? %>
+                        <br><small><%= @tournament.venue.full_address %></small>
+                      <% end %>
+                    <% else %>
+                      <%= t('home.tournaments.location_tbd') %>
                     <% end %>
                   </span>
                 </div>
@@ -204,6 +210,11 @@
             </div>
           </div>
         <% end %>
+        
+        <!-- Comments Section -->
+        <div class="comments-wrapper">
+          <%= render 'comments/comments_section', tournament: @tournament %>
+        </div>
       </div>
     </div>
   </div>
@@ -674,3 +685,421 @@
     }
   });
 </script>
+
+<style>
+  /* Comments Section Styles */
+  .comments-wrapper {
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 2px solid var(--border-color, #e5e7eb);
+  }
+
+  .comments-section {
+    background: var(--bg-card, white);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .comments-header {
+    margin-bottom: 25px;
+  }
+
+  .comments-header h2 {
+    font-size: 1.75rem;
+    color: var(--text-primary, #333);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .comments-count {
+    font-size: 1rem;
+    color: var(--text-secondary, #666);
+    font-weight: normal;
+  }
+
+  .new-comment-section {
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+  }
+
+  .comment-form-container {
+    background: var(--bg-secondary, #f9fafb);
+    border-radius: 8px;
+    padding: 24px;
+  }
+
+  .comment-form .form-group {
+    margin-bottom: 0;
+  }
+
+  .comment-textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    line-height: 1.5;
+  }
+
+  .comment-textarea:focus {
+    outline: none;
+    border-color: var(--accent, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .char-count {
+    text-align: right;
+    font-size: 0.875rem;
+    color: var(--text-secondary, #666);
+    margin-top: 8px;
+    margin-bottom: 0;
+    padding-right: 2px;
+  }
+
+  .comment-form-container .form-actions {
+    display: flex !important;
+    gap: 12px !important;
+    align-items: center !important;
+    margin-top: 16px !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+  }
+
+  /* Submit button styles with high specificity - target all possible selectors */
+  .comment-form-container .form-actions input[type="submit"],
+  .comment-form-container .form-actions input[type="submit"].btn-comment,
+  .comment-form-container .form-actions input.btn-comment,
+  .comment-form-container .form-actions button.btn-comment,
+  .comment-form .form-actions input[type="submit"],
+  .comment-form .form-actions input[type="submit"].btn-comment,
+  .comment-form .form-actions input.btn-comment,
+  .comment-form .form-actions button.btn-comment,
+  .comment-form-container .btn-comment,
+  #comment-form input[type="submit"],
+  #comment-form .btn-comment,
+  input.btn-comment,
+  button.btn-comment {
+    padding: 12px 28px !important;
+    background: var(--accent, #3b82f6) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    min-width: 150px !important;
+    width: auto !important;
+    max-width: none !important;
+    display: inline-block !important;
+    text-align: center !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Hover state */
+  .comment-form-container .form-actions input[type="submit"]:hover:not(:disabled),
+  .comment-form-container .form-actions input[type="submit"].btn-comment:hover:not(:disabled),
+  .comment-form-container .form-actions input.btn-comment:hover:not(:disabled),
+  .comment-form-container .form-actions button.btn-comment:hover:not(:disabled),
+  .comment-form .form-actions input[type="submit"]:hover:not(:disabled),
+  .comment-form .form-actions input[type="submit"].btn-comment:hover:not(:disabled),
+  .comment-form .form-actions input.btn-comment:hover:not(:disabled),
+  .comment-form .form-actions button.btn-comment:hover:not(:disabled),
+  .comment-form-container .btn-comment:hover:not(:disabled),
+  #comment-form input[type="submit"]:hover:not(:disabled),
+  #comment-form .btn-comment:hover:not(:disabled),
+  input.btn-comment:hover:not(:disabled),
+  button.btn-comment:hover:not(:disabled) {
+    background: var(--accent-hover, #2563eb) !important;
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* Active state */
+  .comment-form-container .form-actions input[type="submit"]:active:not(:disabled),
+  .comment-form-container .form-actions input[type="submit"].btn-comment:active:not(:disabled),
+  .comment-form-container .form-actions input.btn-comment:active:not(:disabled),
+  .comment-form-container .form-actions button.btn-comment:active:not(:disabled),
+  .comment-form .form-actions input[type="submit"]:active:not(:disabled),
+  .comment-form .form-actions input[type="submit"].btn-comment:active:not(:disabled),
+  .comment-form .form-actions input.btn-comment:active:not(:disabled),
+  .comment-form .form-actions button.btn-comment:active:not(:disabled),
+  .comment-form-container .btn-comment:active:not(:disabled),
+  #comment-form input[type="submit"]:active:not(:disabled),
+  #comment-form .btn-comment:active:not(:disabled),
+  input.btn-comment:active:not(:disabled),
+  button.btn-comment:active:not(:disabled) {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2) !important;
+  }
+
+  /* Disabled state */
+  .comment-form-container .form-actions input[type="submit"]:disabled,
+  .comment-form-container .form-actions input[type="submit"].btn-comment:disabled,
+  .comment-form-container .form-actions input.btn-comment:disabled,
+  .comment-form-container .form-actions button.btn-comment:disabled,
+  .comment-form .form-actions input[type="submit"]:disabled,
+  .comment-form .form-actions input[type="submit"].btn-comment:disabled,
+  .comment-form .form-actions input.btn-comment:disabled,
+  .comment-form .form-actions button.btn-comment:disabled,
+  .comment-form-container .btn-comment:disabled,
+  #comment-form input[type="submit"]:disabled,
+  #comment-form .btn-comment:disabled,
+  input.btn-comment:disabled,
+  button.btn-comment:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+  }
+
+  /* Disabled hover state */
+  .comment-form-container .form-actions input[type="submit"]:disabled:hover,
+  .comment-form-container .form-actions input[type="submit"].btn-comment:disabled:hover,
+  .comment-form-container .form-actions input.btn-comment:disabled:hover,
+  .comment-form-container .form-actions button.btn-comment:disabled:hover,
+  .comment-form .form-actions input[type="submit"]:disabled:hover,
+  .comment-form .form-actions input[type="submit"].btn-comment:disabled:hover,
+  .comment-form .form-actions input.btn-comment:disabled:hover,
+  .comment-form .form-actions button.btn-comment:disabled:hover,
+  .comment-form-container .btn-comment:disabled:hover,
+  #comment-form input[type="submit"]:disabled:hover,
+  #comment-form .btn-comment:disabled:hover,
+  input.btn-comment:disabled:hover,
+  button.btn-comment:disabled:hover {
+    background: var(--accent, #3b82f6) !important;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2) !important;
+  }
+
+  .btn-secondary {
+    padding: 12px 24px;
+    background: var(--bg-secondary, #f9fafb);
+    color: var(--text-primary, #333);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-block;
+    min-width: 100px;
+    text-align: center;
+  }
+
+  .btn-secondary:hover {
+    background: var(--border-color, #e5e7eb);
+    border-color: var(--text-secondary, #666);
+  }
+
+  .comment-sign-in-prompt {
+    text-align: center;
+    padding: 20px;
+    background: var(--bg-secondary, #f9fafb);
+    border-radius: 8px;
+    margin-bottom: 30px;
+  }
+
+  .sign-in-link {
+    color: var(--accent, #3b82f6);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .sign-in-link:hover {
+    text-decoration: underline;
+  }
+
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .no-comments {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary, #666);
+  }
+
+  .comment-item {
+    background: var(--bg-card, white);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    padding: 20px;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .comment-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .comment-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent, #3b82f6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .author-name {
+    font-weight: 600;
+    color: var(--text-primary, #333);
+    font-size: 1rem;
+  }
+
+  .comment-time {
+    font-size: 0.875rem;
+    color: var(--text-secondary, #666);
+  }
+
+  .comment-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-edit-comment,
+  .btn-delete-comment {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+  }
+
+  .btn-edit-comment:hover,
+  .btn-delete-comment:hover {
+    background: var(--bg-secondary, #f9fafb);
+  }
+
+  .delete-comment-form {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .delete-comment-form button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+  }
+
+  .delete-comment-form button:hover {
+    background: var(--bg-secondary, #f9fafb);
+  }
+
+  .comment-body {
+    margin-bottom: 12px;
+  }
+
+  .comment-content {
+    color: var(--text-primary, #333);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .comment-footer {
+    margin-top: 12px;
+  }
+
+  .btn-reply {
+    background: none;
+    border: none;
+    color: var(--accent, #3b82f6);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+  }
+
+  .btn-reply:hover {
+    background: var(--bg-secondary, #f9fafb);
+  }
+
+  .replies-container {
+    margin-top: 20px;
+    margin-left: 40px;
+    padding-left: 20px;
+    border-left: 2px solid var(--border-color, #e5e7eb);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .reply-form-container {
+    margin-top: 15px;
+    margin-left: 40px;
+  }
+
+  .error-messages {
+    margin-top: 10px;
+    padding: 10px;
+    background: #fee;
+    border: 1px solid #fcc;
+    border-radius: 4px;
+  }
+
+  .error-message {
+    color: #c33;
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 768px) {
+    .comments-section {
+      padding: 20px;
+    }
+
+    .replies-container {
+      margin-left: 20px;
+      padding-left: 15px;
+    }
+
+    .reply-form-container {
+      margin-left: 20px;
+    }
+  }
+</style>

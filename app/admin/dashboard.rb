@@ -134,7 +134,7 @@ ActiveAdmin.register_page "Dashboard" do
     if current_user.super_admin? || current_user.admin?
       # Admin/Super Admin: Show all tournaments
       panel "Recent Tournaments", class: "tournaments-panel" do
-        table_for Tournament.includes(:sport, :created_by, :tournament_theme).order('created_at DESC').limit(10), class: "dashboard-table" do
+        table_for Tournament.includes(:sport, :created_by).order('created_at DESC').limit(10), class: "dashboard-table" do
           column :title
           column :sport
           column :tournament_status

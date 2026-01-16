@@ -9,7 +9,7 @@ ActiveAdmin.register Tournament do
                 :tournament_theme_id, :rules_and_regulations,
                 :first_prize, :second_prize, :third_prize, :prizes_json,
                 :contact_phones, :teams_text, :organized_by,
-                :venue_name, :venue_address, :venue_latitude, :venue_longitude, :venue_google_maps_link,
+                :venue_address, :venue_google_maps_link,
                 :remove_image,
                 team_ids: [], contact_phones: []
                 # Note: :image is handled manually in create/update to avoid service_name errors
@@ -490,12 +490,11 @@ ActiveAdmin.register Tournament do
     end
 
     f.inputs "Venue (Google Maps)" do
-      f.input :venue_name, hint: "Venue name from Google Maps"
       f.input :venue_address, as: :text, hint: "Full address from Google Maps", input_html: { rows: 2 }
-      f.input :venue_latitude, hint: "Latitude from Google Maps"
-      f.input :venue_longitude, hint: "Longitude from Google Maps"
       f.input :venue_google_maps_link, hint: "Google Maps link (optional)"
-      f.input :venue, hint: "Legacy venue (optional - use Google Maps fields above instead)"
+      f.input :venue, as: :select, 
+              collection: Venue.active.order(:name).map { |v| [v.name, v.id] },
+              hint: "Legacy venue (optional - use Google Maps fields above instead)"
     end
 
     f.inputs "Contact Information" do
@@ -622,7 +621,7 @@ ActiveAdmin.register Tournament do
       f.input :teams, as: :select, 
               collection: Team.active.includes(:sport).map { |t| ["#{t.name} (#{t.sport.name})#{' [Default]' if t.is_default?}", t.id] },
               input_html: { multiple: true, class: 'chosen-select' },
-              hint: "Legacy: Select existing teams (optional - use Teams Text field above instead)"
+              hint: "Legacy: Select existing teams (optional - use Teams Text field above instead)" if current_user.super_admin?
     end
 
     f.actions
@@ -635,11 +634,8 @@ ActiveAdmin.register Tournament do
       row :description
       row :sport
       row :cricket_match_type
-      row :venue_name do |tournament|
-        tournament.venue_name.presence || (tournament.venue&.name)
-      end
       row :venue_address do |tournament|
-        tournament.venue_address.presence || (tournament.venue&.full_address)
+        tournament.venue_address.presence || (tournament.venue&.full_address) || '-'
       end
       row :venue_google_maps_link do |tournament|
         if tournament.venue_google_maps_link.present?
@@ -719,13 +715,6 @@ ActiveAdmin.register Tournament do
           div style: 'padding: 15px; background: #f5f5f5; border-radius: 4px;' do
             div style: 'margin: 15px 0;' do
               image_tag url_for(tournament.image), style: 'max-width: 100%; max-height: 500px; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'
-            end
-            div style: 'margin-top: 10px; padding: 10px; background: white; border-radius: 4px;' do
-              para "<strong>Filename:</strong> #{tournament.image.filename}".html_safe
-              para "<strong>Size:</strong> #{number_to_human_size(tournament.image.byte_size)}".html_safe
-              para "<strong>Content Type:</strong> #{tournament.image.content_type}".html_safe
-              para "<strong>Service:</strong> #{tournament.image.blob.service_name}".html_safe
-              para "<strong>URL:</strong> #{link_to url_for(tournament.image), url_for(tournament.image), target: '_blank'}".html_safe
             end
           end
         end

@@ -17,10 +17,8 @@ module TournamentThemeHelper
     html.gsub!('{{TOURNAMENT_TITLE}}', tournament.title || 'Tournament')
     html.gsub!('{{TOURNAMENT_DESCRIPTION}}', tournament.description || '')
     html.gsub!('{{SPORT_NAME}}', tournament.sport.name || 'Sport')
-    # Use venue_name/venue_address if available, otherwise fall back to venue association
-    venue_name = tournament.respond_to?(:venue_name) && tournament.venue_name.present? ? tournament.venue_name : (tournament.venue&.name || 'Venue')
+    # Use venue_address if available, otherwise fall back to venue association
     venue_address = tournament.respond_to?(:venue_address) && tournament.venue_address.present? ? tournament.venue_address : (tournament.venue&.full_address || '')
-    html.gsub!('{{VENUE_NAME}}', venue_name)
     html.gsub!('{{VENUE_ADDRESS}}', venue_address)
     html.gsub!('{{START_TIME}}', tournament.start_time ? tournament.start_time.strftime('%B %d, %Y') : 'TBD')
     html.gsub!('{{START_TIME_FULL}}', tournament.start_time ? tournament.start_time.strftime('%B %d, %Y at %I:%M %p') : 'TBD')
@@ -85,11 +83,7 @@ module TournamentThemeHelper
     # Priority 2: venue association google_maps_link
     elsif tournament.venue&.google_maps_link.present?
       gmap_link = tournament.venue.google_maps_link.to_s.strip
-    # Priority 3: Generate from venue_latitude/venue_longitude
-    elsif tournament.respond_to?(:venue_latitude) && tournament.respond_to?(:venue_longitude) && 
-          tournament.venue_latitude.present? && tournament.venue_longitude.present?
-      gmap_link = "https://www.google.com/maps?q=#{tournament.venue_latitude},#{tournament.venue_longitude}"
-    # Priority 4: Generate from tournament latitude/longitude
+    # Priority 3: Generate from tournament latitude/longitude
     elsif tournament.latitude.present? && tournament.longitude.present?
       gmap_link = "https://www.google.com/maps?q=#{tournament.latitude},#{tournament.longitude}"
     end

@@ -10,9 +10,9 @@
 # - Lazy loading support
 # - Responsive images
 #
-# Note: Only configured in production. Development uses local storage.
+# Configured for both development and production when credentials are available.
 
-if Rails.env.production? && ENV['CLOUDINARY_CLOUD_NAME'].present?
+if ENV['CLOUDINARY_CLOUD_NAME'].present?
   begin
     require 'cloudinary'
     Cloudinary.config do |config|
@@ -22,10 +22,10 @@ if Rails.env.production? && ENV['CLOUDINARY_CLOUD_NAME'].present?
       config.secure = true # Use HTTPS for security and performance
       config.cdn_subdomain = true # Enable CDN subdomain for better caching
     end
-    Rails.logger.info "Cloudinary configured for production: #{ENV['CLOUDINARY_CLOUD_NAME']}"
+    Rails.logger.info "Cloudinary configured for #{Rails.env}: #{ENV['CLOUDINARY_CLOUD_NAME']}"
   rescue LoadError => e
     Rails.logger.error "Cloudinary gem not available: #{e.message}"
   end
-elsif Rails.env.production? && ENV['CLOUDINARY_CLOUD_NAME'].blank?
+elsif Rails.env.production?
   Rails.logger.warn "WARNING: Cloudinary credentials not set in production. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables."
 end

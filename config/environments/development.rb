@@ -32,10 +32,23 @@ Rails.application.configure do
     config.cache_store = :null_store
   end
 
-  # Store uploaded files locally in development (for faster development, no external dependencies)
-  # Production uses Cloudinary for better performance and CDN
+  # Store uploaded files using Cloudinary if credentials are available, otherwise use local storage
+  # Cloudinary provides CDN, automatic optimization, and better performance
+  # Requires CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables
   config.active_storage.variant_processor = :mini_magick
-  config.active_storage.service = :local
+  if ENV['CLOUDINARY_CLOUD_NAME'].present?
+    config.active_storage.service = :cloudinary
+    # Use safe logging that works during initialization (when Rails.logger might be nil)
+    if defined?(Rails.logger) && Rails.logger
+      Rails.logger.info "Cloudinary configured for development: #{ENV['CLOUDINARY_CLOUD_NAME']}"
+    end
+  else
+    config.active_storage.service = :local
+    # Use safe logging that works during initialization (when Rails.logger might be nil)
+    if defined?(Rails.logger) && Rails.logger
+      Rails.logger.info "Using local storage for development. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to use Cloudinary."
+    end
+  end
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false

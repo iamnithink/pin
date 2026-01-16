@@ -132,7 +132,15 @@
                       </div>
                       <div class="preview-info-item">
                         <span>📍</span>
-                        <span><%= tournament.venue_name.presence || tournament.venue&.name || t('home.tournaments.location_tbd') %></span>
+                        <span>
+                          <% if tournament.venue_address.present? %>
+                            <%= tournament.venue_address.split(',').first %>
+                          <% elsif tournament.venue.present? %>
+                            <%= tournament.venue.name %>
+                          <% else %>
+                            <%= t('home.tournaments.location_tbd') %>
+                          <% end %>
+                        </span>
                       </div>
                       <% if tournament.entry_fee.present? %>
                         <div class="preview-info-item">
@@ -170,9 +178,13 @@
                   <div class="meta-item">
                     <span class="meta-icon">📍</span>
                       <span class="meta-text">
-                        <% venue_display = tournament.venue_name.presence %>
-                        <% venue_display ||= tournament.venue&.name if tournament.venue_id.present? %>
-                        <%= venue_display || t('home.tournaments.location_tbd') %>
+                        <% if tournament.venue_address.present? %>
+                          <%= tournament.venue_address.split(',').first %>
+                        <% elsif tournament.venue.present? %>
+                          <%= tournament.venue.name %>
+                        <% else %>
+                          <%= t('home.tournaments.location_tbd') %>
+                        <% end %>
                       </span>
                   </div>
                   
@@ -245,7 +257,7 @@
                           data-image="<%= share_image %>"
                           data-sport="<%= tournament.sport.name %>"
                           data-date="<%= tournament.start_time.strftime('%B %d, %Y at %I:%M %p') %>"
-                          data-venue="<%= tournament.venue_name.presence || tournament.venue&.name || 'TBD' %>"
+                          data-venue="<%= tournament.venue_address.presence&.split(',')&.first || tournament.venue&.name || 'TBD' %>"
                           data-entry-fee="<%= tournament.entry_fee.present? ? "₹#{tournament.entry_fee}" : 'Free' %>"
                           data-tournament-id="<%= tournament.id %>"
                           style="display: inline-flex; align-items: center; gap: 6px;">

@@ -27,6 +27,8 @@ class Ability
       can :read, TournamentTheme
       can :read, User
       can :update, User, id: user.id  # Can update own profile
+      # Admin can manage all comments
+      can :manage, Comment
       
     when 'user'
       # User: Access to own tournaments, homepage
@@ -51,6 +53,13 @@ class Ability
       
       # Can view teams (read-only)
       can :read, Team
+      
+      # Comments: Can create comments on published tournaments
+      can :create, Comment, tournament: { tournament_status: 'published' }
+      # Can read comments on published tournaments
+      can :read, Comment, tournament: { tournament_status: 'published' }
+      # Can update/delete own comments
+      can [:update, :destroy], Comment, user_id: user.id
       
     else
       # Unknown role - no access

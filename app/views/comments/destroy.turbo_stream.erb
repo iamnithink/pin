@@ -1,0 +1,12 @@
+<%= turbo_stream.remove "comment-#{@comment.id}" %>
+
+<% if @comment.is_top_level? %>
+  <%= turbo_stream.update "comments-header" do %>
+    <h2>
+      Comments
+      <% if @tournament.reload.comments_count > 0 %>
+        <span class="comments-count">(<%= @tournament.comments_count %>)</span>
+      <% end %>
+    </h2>
+  <% end %>
+<% end %>

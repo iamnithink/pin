@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_16_064230) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -63,6 +63,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_admin_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
+  end
+
+  create_table "comments", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "user_id", null: false
+    t.bigint "tournament_id", null: false
+    t.bigint "parent_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["parent_id"], name: "index_comments_on_parent_id"
+    t.index ["tournament_id", "created_at"], name: "index_comments_on_tournament_id_and_created_at"
+    t.index ["tournament_id"], name: "index_comments_on_tournament_id"
+    t.index ["user_id", "created_at"], name: "index_comments_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_comments_on_user_id"
   end
 
   create_table "cricket_match_types", force: :cascade do |t|
@@ -211,13 +225,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
     t.text "prizes_json", comment: "JSON field for additional prize levels"
     t.text "contact_phones", comment: "JSON array of contact phone numbers"
     t.text "teams_text", comment: "Text field for team names (one per line)"
-    t.string "venue_name"
     t.text "venue_address"
-    t.decimal "venue_latitude", precision: 10, scale: 7
-    t.decimal "venue_longitude", precision: 10, scale: 7
     t.string "venue_google_maps_link"
     t.string "organized_by", comment: "Organizer name (string field, not user association)"
     t.integer "likes_count", default: 0, null: false
+    t.integer "comments_count", default: 0, null: false
+    t.index ["comments_count"], name: "index_tournaments_on_comments_count"
     t.index ["created_by_id"], name: "index_tournaments_on_created_by_id"
     t.index ["cricket_match_type_id"], name: "index_tournaments_on_cricket_match_type_id"
     t.index ["is_active"], name: "index_tournaments_on_is_active"
@@ -300,6 +313,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_07_111411) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "comments", "comments", column: "parent_id"
+  add_foreign_key "comments", "tournaments"
+  add_foreign_key "comments", "users"
   add_foreign_key "team_members", "teams"
   add_foreign_key "team_members", "users"
   add_foreign_key "teams", "sports"

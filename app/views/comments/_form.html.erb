@@ -1,0 +1,80 @@
+<% if user_signed_in? %>
+  <div class="comment-form-container" id="<%= comment&.persisted? ? "comment-form-#{comment.id}" : (comment&.parent_id.present? ? "reply-form-#{comment.parent_id}" : 'comment-form') %>">
+    <%= form_with model: [tournament, comment || Comment.new], 
+        class: "comment-form",
+        data: { 
+          turbo_frame: comment&.persisted? ? "comment-#{comment.id}" : nil
+        } do |f| %>
+      <% if comment&.parent_id.present? %>
+        <%= f.hidden_field :parent_id, value: comment.parent_id %>
+      <% end %>
+      
+      <div class="form-group">
+        <%= f.text_area :body, 
+            rows: comment&.parent_id.present? ? 3 : 4,
+            placeholder: comment&.parent_id.present? ? "Write a reply..." : "Write a comment...",
+            class: "form-control comment-textarea",
+            required: true,
+            maxlength: 5000 %>
+        <div class="char-count">
+          <span class="current-count">0</span> / 5000 characters
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <%= f.submit comment&.persisted? ? "Update Comment" : (comment&.parent_id.present? ? "Post Reply" : "Post Comment"), 
+            class: "btn-comment",
+            data: { 
+              disable_with: comment&.persisted? ? "Updating..." : (comment&.parent_id.present? ? "Posting Reply..." : "Posting Comment...")
+            } %>
+        <% if comment&.persisted? %>
+          <button type="button" class="btn btn-secondary btn-cancel-edit" data-comment-id="<%= comment.id %>">Cancel</button>
+        <% end %>
+      </div>
+      
+      <% if comment&.errors&.any? %>
+        <div class="error-messages">
+          <% comment.errors.full_messages.each do |message| %>
+            <div class="error-message"><%= message %></div>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% else %>
+  <div class="comment-sign-in-prompt">
+    <p><%= link_to "Sign in", new_user_session_path, class: "sign-in-link" %> to post a comment.</p>
+  </div>
+<% end %>
+
+<script>
+  // Initialize character counters for dynamically added forms
+  function initCharCounter(textarea) {
+    const formContainer = textarea.closest('.comment-form-container');
+    const charCount = formContainer ? formContainer.querySelector('.char-count .current-count') : null;
+    
+    if (charCount && !textarea.hasAttribute('data-char-count-initialized')) {
+      textarea.setAttribute('data-char-count-initialized', 'true');
+      textarea.addEventListener('input', function() {
+        charCount.textContent = this.value.length;
+      });
+      charCount.textContent = textarea.value.length;
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.comment-textarea').forEach(initCharCounter);
+  });
+
+  // Reinitialize after Turbo Stream updates
+  document.addEventListener('turbo:frame-load', function() {
+    document.querySelectorAll('.comment-textarea').forEach(initCharCounter);
+  });
+
+  document.addEventListener('turbo:before-stream-render', function() {
+    setTimeout(function() {
+      document.querySelectorAll('.comment-textarea').forEach(initCharCounter);
+    }, 100);
+  });
+</script>

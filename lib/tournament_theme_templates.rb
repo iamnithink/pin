@@ -341,10 +341,6 @@ module TournamentThemeTemplates
           <span class="theme-detail-value">{{START_TIME_FULL}}</span>
         </div>
         <div class="theme-detail-row">
-          <span class="theme-detail-label">Venue:</span>
-          <span class="theme-detail-value">{{VENUE_NAME}}</span>
-        </div>
-        <div class="theme-detail-row">
           <span class="theme-detail-label">Location:</span>
           <span class="theme-detail-value">{{VENUE_ADDRESS}}</span>
         </div>
@@ -750,10 +746,6 @@ module TournamentThemeTemplates
           <span class="theme-detail-value">{{START_TIME_FULL}}</span>
         </div>
         <div class="theme-detail-row">
-          <span class="theme-detail-label">Venue:</span>
-          <span class="theme-detail-value">{{VENUE_NAME}}</span>
-        </div>
-        <div class="theme-detail-row">
           <span class="theme-detail-label">Location:</span>
           <span class="theme-detail-value">{{VENUE_ADDRESS}}</span>
         </div>
@@ -1142,10 +1134,6 @@ module TournamentThemeTemplates
         <div class="theme-detail-row">
           <span class="theme-detail-label">Date:</span>
           <span class="theme-detail-value">{{START_TIME_FULL}}</span>
-        </div>
-        <div class="theme-detail-row">
-          <span class="theme-detail-label">Venue:</span>
-          <span class="theme-detail-value">{{VENUE_NAME}}</span>
         </div>
         <div class="theme-detail-row">
           <span class="theme-detail-label">Location:</span>

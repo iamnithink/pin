@@ -1,0 +1,34 @@
+<% if @comment.parent_id.present? %>
+  <% 
+    # Handle reply creation
+    parent_comment = @tournament.comments.find(@comment.parent_id)
+    replies_container_id = "replies-#{@comment.parent_id}"
+  %>
+  <% if parent_comment.replies.loaded? || parent_comment.replies.exists? %>
+    <%= turbo_stream.append replies_container_id do %>
+      <%= render "comments/comment", comment: @comment, tournament: @tournament %>
+    <% end %>
+  <% else %>
+    <%= turbo_stream.append "comment-#{@comment.parent_id}" do %>
+      <div class="replies-container" id="<%= replies_container_id %>">
+        <%= render "comments/comment", comment: @comment, tournament: @tournament %>
+      </div>
+    <% end %>
+  <% end %>
+  <%= turbo_stream.remove "reply-form-#{@comment.parent_id}" %>
+<% else %>
+  <%= turbo_stream.prepend "comments-list" do %>
+    <%= render "comments/comment", comment: @comment, tournament: @tournament %>
+  <% end %>
+  <%= turbo_stream.replace "comment-form" do %>
+    <%= render "comments/form", tournament: @tournament, comment: Comment.new %>
+  <% end %>
+  <%= turbo_stream.update "comments-header" do %>
+    <h2>
+      Comments
+      <% if @tournament.reload.comments_count > 0 %>
+        <span class="comments-count">(<%= @tournament.comments_count %>)</span>
+      <% end %>
+    </h2>
+  <% end %>
+<% end %>

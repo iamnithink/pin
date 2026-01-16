@@ -31,8 +31,8 @@ class HomeController < ApplicationController
     # Apply search filter
     if search_query.present?
       @tournaments = @tournaments.where(
-        "LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(venue_name) LIKE ? OR LOWER(venue_address) LIKE ?",
-        "%#{search_query.downcase}%", "%#{search_query.downcase}%", "%#{search_query.downcase}%", "%#{search_query.downcase}%"
+        "LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(venue_address) LIKE ?",
+        "%#{search_query.downcase}%", "%#{search_query.downcase}%", "%#{search_query.downcase}%"
       )
     end
     
@@ -48,7 +48,7 @@ class HomeController < ApplicationController
     
     # Note: venue is NOT preloaded to avoid Bullet warnings
     # The view checks venue_id.present? before accessing venue, and most tournaments
-    # use venue_name/venue_address fields directly, so lazy loading is acceptable
+    # use venue_address field directly, so lazy loading is acceptable
     
     # Sort by location if coordinates provided, otherwise by start_time
     if user_lat.present? && user_lng.present?

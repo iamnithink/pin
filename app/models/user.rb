@@ -15,6 +15,7 @@ class User < ApplicationRecord
   has_many :created_venues, class_name: 'Venue', foreign_key: 'created_by_id', dependent: :nullify
   has_many :tournament_likes, dependent: :destroy
   has_many :liked_tournaments, through: :tournament_likes, source: :tournament
+  has_many :comments, dependent: :destroy
 
   # Roles
   # Explicitly declare the attribute type for Rails 7.2+ enum support

@@ -14,6 +14,8 @@ class Tournament < ApplicationRecord
   has_many :teams, through: :tournament_teams
   has_many :tournament_likes, dependent: :destroy
   has_many :liked_by_users, through: :tournament_likes, source: :user
+  has_many :comments, dependent: :destroy
+  has_many :top_level_comments, -> { where(parent_id: nil).order(created_at: :desc) }, class_name: 'Comment'
 
   # ActionText for rules and regulations
   has_rich_text :rules_and_regulations
@@ -97,26 +99,20 @@ class Tournament < ApplicationRecord
   end
 
   def geocode_from_venue
-    # Use new venue fields if available
-    if venue_latitude.present? && venue_longitude.present?
-      self.latitude = venue_latitude
-      self.longitude = venue_longitude
-    elsif venue.present?
-      self.latitude = venue.latitude
-      self.longitude = venue.longitude
-      self.pincode = venue.pincode
+    # Use venue association if available
+    if venue.present?
+      self.latitude = venue.latitude if venue.latitude.present?
+      self.longitude = venue.longitude if venue.longitude.present?
+      self.pincode = venue.pincode if venue.pincode.present?
     end
   end
 
   def set_location_from_venue
-    # Use new venue fields if available
-    if venue_latitude.present? && venue_longitude.present?
-      self.latitude ||= venue_latitude
-      self.longitude ||= venue_longitude
-    elsif venue.present?
-      self.latitude ||= venue.latitude
-      self.longitude ||= venue.longitude
-      self.pincode ||= venue.pincode
+    # Use venue association if available
+    if venue.present?
+      self.latitude ||= venue.latitude if venue.latitude.present?
+      self.longitude ||= venue.longitude if venue.longitude.present?
+      self.pincode ||= venue.pincode if venue.pincode.present?
     end
   end
 

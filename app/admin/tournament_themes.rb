@@ -34,7 +34,7 @@ ActiveAdmin.register TournamentTheme do
     
     f.inputs "HTML Template" do
       f.input :template_html, as: :text, 
-              hint: "HTML template with placeholders: {{TOURNAMENT_TITLE}}, {{VENUE_NAME}}, {{START_TIME}}, {{ENTRY_FEE}}, etc.",
+              hint: "HTML template with placeholders: {{TOURNAMENT_TITLE}}, {{VENUE_ADDRESS}}, {{START_TIME}}, {{ENTRY_FEE}}, etc.",
               input_html: { rows: 20, style: 'font-family: monospace; font-size: 12px;' }
     end
     
@@ -63,7 +63,6 @@ ActiveAdmin.register TournamentTheme do
           title: "Sample Tournament",
           description: "This is a sample tournament preview",
           sport: OpenStruct.new(name: "Cricket"),
-          venue: OpenStruct.new(name: "Sample Venue", full_address: "123 Main St, City, State 123456", google_maps_link: "https://www.google.com/maps?q=12.9716,77.5946"),
           start_time: 1.week.from_now,
           entry_fee: 500,
           max_players_per_team: 11,
@@ -78,8 +77,7 @@ ActiveAdmin.register TournamentTheme do
           prizes_json: { "fourth" => 5000, "fifth" => 3000 },
           tournament_theme: tournament_theme,
           venue_google_maps_link: "https://www.google.com/maps?q=12.9716,77.5946",
-          venue_latitude: 12.9716,
-          venue_longitude: 77.5946,
+          venue_address: "Bangalore, Karnataka, India",
           latitude: 12.9716,
           longitude: 77.5946
         )
