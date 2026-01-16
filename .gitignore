@@ -51,6 +51,7 @@ export_env_for_railway.sh
 RAILWAY_DEPLOY_NOW.md
 verify_deployment.sh
 BUILD_FIX.md
+DEPLOYMENT_FIX_STATUS.md
 
 # Ignore node_modules
 /node_modules

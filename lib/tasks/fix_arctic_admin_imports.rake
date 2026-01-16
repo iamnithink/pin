@@ -5,8 +5,10 @@ namespace :assets do
   task :fix_arctic_admin_imports do
     # Find arctic_admin gem path
     arctic_admin_spec = Gem::Specification.find_by_name("arctic_admin")
-    arctic_admin_path = File.join(arctic_admin_spec.gem_dir, "app/assets/stylesheets/arctic_admin/_base.scss")
-    if arctic_admin_path && File.exist?(arctic_admin_path)
+    arctic_admin_dir = File.join(arctic_admin_spec.gem_dir, "app/assets/stylesheets/arctic_admin")
+    arctic_admin_path = File.join(arctic_admin_dir, "_base.scss")
+    
+    if File.exist?(arctic_admin_path)
       content = File.read(arctic_admin_path)
       
       # Replace glob imports with explicit imports
@@ -44,19 +46,63 @@ namespace :assets do
       ]
       
       # Build replacement
-      replacement = components.map { |c| "@import \"#{c}\";" }.join("\n")
-      replacement += "\n" + layouts.map { |l| "@import \"#{l}\";" }.join("\n")
-      replacement += "\n" + pages.map { |p| "@import \"#{p}\";" }.join("\n")
+      components_imports = components.map { |c| "@import \"#{c}\";" }.join("\n")
+      layouts_imports = layouts.map { |l| "@import \"#{l}\";" }.join("\n")
+      pages_imports = pages.map { |p| "@import \"#{p}\";" }.join("\n")
       
-      new_content = content.gsub(/@import "components\/\*";/, replacement.split("\n").first(components.length).join("\n"))
-                           .gsub(/@import "layouts\/\*";/, layouts.map { |l| "@import \"#{l}\";" }.join("\n"))
-                           .gsub(/@import "pages\/\*";/, pages.map { |p| "@import \"#{p}\";" }.join("\n"))
+      new_content = content.gsub(/@import "components\/\*";/, components_imports)
+                           .gsub(/@import "layouts\/\*";/, layouts_imports)
+                           .gsub(/@import "pages\/\*";/, pages_imports)
       
       if new_content != content
         File.write(arctic_admin_path, new_content)
         puts "Fixed arctic_admin imports in #{arctic_admin_path}"
       else
         puts "No changes needed in #{arctic_admin_path}"
+      end
+      
+      # Fix incompatible units issue - replace ALL variable usages with literal values
+      # SassC can't handle percentage variables being used with pixel values
+      [File.join(arctic_admin_dir, "components/_form.scss"),
+       File.join(arctic_admin_dir, "pages/_form.scss")].each do |scss_file|
+        next unless File.exist?(scss_file)
+        
+        content = File.read(scss_file)
+        new_content = content
+        
+        # Replace ALL occurrences of the variables with literal values
+        new_content = new_content.gsub(/\$form-margin-left/, '25%')
+        new_content = new_content.gsub(/\$form-input-width/, '50%')
+        
+        # Ensure margin shorthand is split
+        new_content = new_content.gsub(
+          /margin:\s*5px\s+0\s+20px\s+[^;]+;/,
+          'margin-top: 5px; margin-right: 0; margin-bottom: 20px; margin-left: 25%;'
+        )
+        
+        if new_content != content
+          File.write(scss_file, new_content)
+          puts "Fixed variables in #{File.basename(scss_file)}"
+        end
+      end
+      
+      # Comment out variable definitions to prevent SassC from processing them
+      # All usages have been replaced with literal values
+      size_scss = File.join(arctic_admin_dir, "variables/_size.scss")
+      if File.exist?(size_scss)
+        content = File.read(size_scss)
+        new_content = content.gsub(
+          /\$form-margin-left:\s*.*?;/,
+          '// $form-margin-left: 25% !default; // Commented out - all usages replaced with literal 25%'
+        ).gsub(
+          /\$form-input-width:\s*.*?;/,
+          '// $form-input-width: 50% !default; // Commented out - all usages replaced with literal 50%'
+        )
+        
+        if new_content != content
+          File.write(size_scss, new_content)
+          puts "Commented out variable definitions in variables/_size.scss"
+        end
       end
     else
       puts "arctic_admin _base.scss not found"

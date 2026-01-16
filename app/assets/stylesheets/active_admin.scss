@@ -5,6 +5,19 @@ $primary-color-dark: darken($primary-color, 10%);
 
 @import "arctic_admin/base";
 
+// Fix for SassC incompatible units error - override problematic styles after import
+// This prevents SassC from trying to do arithmetic with incompatible units
+#active_admin_content {
+  form {
+    .inline-hints {
+      margin-top: 5px !important;
+      margin-right: 0 !important;
+      margin-bottom: 20px !important;
+      margin-left: 25% !important;
+    }
+  }
+}
+
 // Professional Trix Editor - Exact Match to Rich Text Editor Demo
 .trix-wrapper {
   margin: 16px 0;
