@@ -3,6 +3,11 @@
 $primary-color: #2c7be5;
 $primary-color-dark: darken($primary-color, 10%);
 
+// CRITICAL FIX: Override problematic variables BEFORE import to prevent SassC incompatible units error
+// These variables cause errors when mixed with pixel values in margin/padding
+$form-margin-left: 25% !default;
+$form-input-width: 50% !default;
+
 @import "arctic_admin/base";
 
 // Fix for SassC incompatible units error - override problematic styles after import
