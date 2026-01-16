@@ -4,14 +4,18 @@ $primary-color: #2c7be5;
 $primary-color-dark: darken($primary-color, 10%);
 
 // CRITICAL FIX: Override problematic variables BEFORE import to prevent SassC incompatible units error
-// These variables cause errors when mixed with pixel values in margin/padding
+// Set as plain strings - the rake task will replace all usages with literal values
 $form-margin-left: 25% !default;
 $form-input-width: 50% !default;
+
+// ActionText styles for rich text editors in ActiveAdmin
+@import "actiontext";
 
 @import "arctic_admin/base";
 
 // Fix for SassC incompatible units error - override problematic styles after import
 // This prevents SassC from trying to do arithmetic with incompatible units
+// Override ALL form-related styles that might mix px and %
 #active_admin_content {
   form {
     .inline-hints {
@@ -19,6 +23,24 @@ $form-input-width: 50% !default;
       margin-right: 0 !important;
       margin-bottom: 20px !important;
       margin-left: 25% !important;
+    }
+    
+  }
+  
+  // Override any problematic margin-left or width properties
+  .formtastic {
+    .inputs,
+    .actions {
+      margin-left: 25% !important;
+    }
+    
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+      width: 50% !important;
+      max-width: 50% !important;
     }
   }
 }

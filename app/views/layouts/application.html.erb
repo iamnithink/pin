@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    
+    <%# Performance: Resource hints for faster loading %>
+    <% if Rails.env.production? %>
+      <%# Preconnect to external domains if using Cloudinary %>
+      <% if ENV['CLOUDINARY_CLOUD_NAME'].present? %>
+        <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+        <link rel="dns-prefetch" href="https://res.cloudinary.com">
+      <% end %>
+      <%# Preconnect to Google Fonts if used %>
+      <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+      <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <% end %>
+    
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= yield :head if content_for?(:head) %>
     <%= javascript_importmap_tags %>

@@ -1,16 +1,12 @@
 // Service Worker for offline caching and faster load times
-const CACHE_NAME = 'pin-tournaments-v1';
-const STATIC_CACHE_NAME = 'pin-static-v1';
-const IMAGE_CACHE_NAME = 'pin-images-v1';
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `pin-tournaments-${CACHE_VERSION}`;
+const STATIC_CACHE_NAME = `pin-static-${CACHE_VERSION}`;
+const IMAGE_CACHE_NAME = `pin-images-${CACHE_VERSION}`;
 
 // Assets to cache immediately on install
 const STATIC_ASSETS = [
-  '/',
-  '/assets/application.css',
-  '/assets/home.css',
-  '/assets/application.js',
-  '/assets/home.js',
-  '/assets/logo.png'
+  '/'
 ];
 
 // Install event - cache static assets

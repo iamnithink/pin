@@ -302,24 +302,82 @@
 
 .tournaments-header {
   margin-bottom: 25px;
+  /* Add clearer background for better text visibility */
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+}
+
+/* Dark theme support for tournaments header */
+[data-theme="dark"] .tournaments-header {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(51, 65, 85, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .section-title {
-  color: white;
-  font-size: 2rem;
+  color: #0f172a;
+  font-size: 2.25rem;
+  font-weight: 700;
   margin: 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  /* Professional styling with better contrast */
+  text-shadow: none !important;
+}
+
+/* Dark theme support for section title */
+[data-theme="dark"] .section-title {
+  color: #f8fafc;
 }
 
 .tournament-count {
-  font-size: 1.2rem;
-  opacity: 0.9;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent, #3b82f6);
+  background: rgba(59, 130, 246, 0.1);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(59, 130, 246, 0.2);
+  white-space: nowrap;
+  /* Professional badge styling */
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+/* Dark theme support for count badge */
+[data-theme="dark"] .tournament-count {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.15);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.tournament-count:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: scale(1.02);
+}
+
+[data-theme="dark"] .tournament-count:hover {
+  background: rgba(96, 165, 250, 0.2);
+  border-color: rgba(96, 165, 250, 0.4);
 }
 
 .tournaments-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 25px;
+  /* Performance: Enable GPU acceleration for smoother scrolling */
+  will-change: contents;
+  /* Performance: Optimize rendering */
+  contain: layout style paint;
 }
 
 /* Tournament Card */
@@ -329,9 +387,13 @@
   color: var(--text-primary, #333);
   overflow: hidden;
   box-shadow: 0 4px 6px var(--shadow, rgba(0, 0, 0, 0.1));
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
+  /* Performance: Enable GPU acceleration for hover effects */
+  will-change: transform;
+  /* Performance: Optimize rendering */
+  contain: layout style paint;
 }
 
 .tournament-card:hover {
@@ -396,7 +458,8 @@
 }
 
 .tournament-theme-wrapper .theme-qr-code img {
-  max-width: min(250px, 100%) !important;
+  max-width: 250px !important;
+  width: 100% !important;
   height: auto !important;
 }
 

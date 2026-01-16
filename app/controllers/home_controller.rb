@@ -106,7 +106,9 @@ class HomeController < ApplicationController
     end
     
     # Check if there are more tournaments
-    total_count = count_query.count
+    # Use size instead of count for better performance (uses cached count if available)
+    # For filtered queries, count is needed, but we can optimize by checking has_more first
+    total_count = count_query.size
     @has_more = total_count > (page * per_page)
     @current_page = page
     @per_page = per_page
